@@ -9,6 +9,12 @@ module.exports = {
         secondary: '#00D4D4',
         accent: '#FF8C42',
         text: '#FFFFFF99',
+        shadow: {
+            secondary: "#184242",
+            accent:"#4B3425"
+        },
+        card: "#E5E7EB",
+        highlight: '#5A5A5A',
       },
       boxShadow: {
         custom: "8px 8px 0 0 rgba(0, 0, 0, 0.8)",
