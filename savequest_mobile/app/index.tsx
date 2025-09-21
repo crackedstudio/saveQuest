@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import "./onbarding";
+import "./pools";
 import { Link } from "expo-router";
 
 export default function Index() {
@@ -11,7 +11,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Link href="/onbarding">Go to Onbarding page</Link>
+      <Text>Welcome to SaveQuest!</Text>
     </View>
   );
 }

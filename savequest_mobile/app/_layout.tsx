@@ -1,39 +1,35 @@
 import { Stack, Tabs } from "expo-router";
+import "../global.css"
 
 export default function RootLayout() {
-  // return <Stack 
-  //   screenOptions={{
-  //     // headerShown: false,
-  //      headerStyle: {
-  //         backgroundColor: '#f4511e',
-  //       },
-  //       headerTintColor: '#fff',
-  //       headerTitleStyle: {
-  //         fontWeight: 'bold',
-  //       },
-  //   }}
-  // >
-  //   <Stack.Screen 
-  //     name="index" 
-  //     // options={{ title: 'Welcome' }}
-  //   />
-  //   <Stack.Screen 
-  //     name="onbarding" 
-  //     // options={{ title: 'Onbarding' }}
-  //   />
-  // </Stack>;
   return <Tabs>
     <Tabs.Screen
       name="index"
       options={{
-        title: "Home",
+        title: "HOME",
         headerShown: false,
       }}
     />
     <Tabs.Screen
-      name="onbarding"
+      name="pools"
       options={{
-        title: "Onbarding",
+        title: "POOLS",
+        headerShown: false,
+      }}
+    />
+
+    <Tabs.Screen
+      name="savings"
+      options={{
+        title: "SAVINGS",
+        headerShown: false,
+      }}
+    />
+
+    <Tabs.Screen
+      name="profile"
+      options={{
+        title: "PROFILE",
         headerShown: false,
       }}
     />
