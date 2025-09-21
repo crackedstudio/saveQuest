@@ -2,14 +2,16 @@ import { View, Text } from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const profile = () => {
+const pools = () => {
   return (
-    <SafeAreaView>
+    <SafeAreaView
+     className="w-full h-full bg-primary"
+    >
     <View>
-      <Text>profile</Text>
+      <Text>pools</Text>
     </View>
     </SafeAreaView>
   )
 }
 
-export default profile
+export default pools

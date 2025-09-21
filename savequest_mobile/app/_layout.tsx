@@ -1,37 +1,26 @@
-import { Stack, Tabs } from "expo-router";
-import "../global.css"
+import { Stack } from "expo-router";
+import "../global.css";
+import { StatusBar } from "react-native";
 
 export default function RootLayout() {
-  return <Tabs>
-    <Tabs.Screen
-      name="index"
-      options={{
-        title: "HOME",
-        headerShown: false,
-      }}
-    />
-    <Tabs.Screen
-      name="pools"
-      options={{
-        title: "POOLS",
-        headerShown: false,
-      }}
-    />
+  return (
+    <>
+      <StatusBar hidden={true} />
 
-    <Tabs.Screen
-      name="savings"
-      options={{
-        title: "SAVINGS",
-        headerShown: false,
-      }}
-    />
-
-    <Tabs.Screen
-      name="profile"
-      options={{
-        title: "PROFILE",
-        headerShown: false,
-      }}
-    />
-  </Tabs>
+      <Stack>
+        <Stack.Screen
+          name="index"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack>
+    </>
+  );
 }
