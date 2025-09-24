@@ -9,3 +9,5 @@ struct VaultInfo {
     created_at: u64,
     is_active: bool,
 }
+
+pub const SAVEQUEST_CLASSHASH: felt252 = 0x0123;
