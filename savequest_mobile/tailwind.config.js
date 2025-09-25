@@ -17,6 +17,7 @@ module.exports = {
         highlight: '#5A5A5A',
         bg: "#303030",
         cardbg: "#FFFFFF1A",
+        background: "#252525"
       },
       boxShadow: {
         custom: "8px 8px 0 0 rgba(0, 0, 0, 0.8)",
