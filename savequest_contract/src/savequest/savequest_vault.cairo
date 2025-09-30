@@ -75,7 +75,11 @@ pub mod SavequestVault {
         self.total_deposited.write(self.total_deposited.read() + _contribution_amount);
 
         // start yeild generation if participants is full
-        if (self.current_participants.read() == self.max_participants.read()) {// start yeild generation logic
+        if (self
+            .current_participants
+            .read() == self
+            .max_participants
+            .read()) { // start yeild generation logic
         }
 
         true

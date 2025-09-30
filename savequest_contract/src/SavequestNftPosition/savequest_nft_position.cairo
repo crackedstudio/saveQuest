@@ -53,7 +53,6 @@ mod MyToken {
 
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
-        self.erc721.initializer("MyToken", "MTK", "");
         self.ownable.initializer(owner);
     }
 
