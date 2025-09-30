@@ -1,26 +1,46 @@
 #[starknet::contract]
 pub mod SaveQuestVault {
-    use starknet::SyscallResultTrait;
-use starknet::get_caller_address;
-use crate::constants::types::NFT_POSITION_CLASSHASH;
-use starknet::syscalls::deploy_syscall;
-use core::num::traits::Zero;
-use savequest_contract::{constants::types::{Pool, Participant}, interfaces::{IVault::IVault, INftPosition::{INftPosition721Dispatcher, INftPosition721DispatcherTrait}}};
-    use starknet::{ContractAddress, get_contract_address};
-     use starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait, MutableVecTrait, Map,  StorageMapWriteAccess, StoragePathEntry
+    use core::num::traits::Zero;
+    use savequest_contract::constants::types::{Participant, Pool};
+    use savequest_contract::interfaces::IERC20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use savequest_contract::interfaces::INftPosition::{
+        INftPosition721Dispatcher, INftPosition721DispatcherTrait,
     };
+    use savequest_contract::interfaces::IVault::IVault;
+    use starknet::storage::{
+        Map, MutableVecTrait, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
+        StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait,
+    };
+    use starknet::syscalls::deploy_syscall;
+    use starknet::{ContractAddress, SyscallResultTrait, get_caller_address, get_contract_address};
+    use crate::constants::types::NFT_POSITION_CLASSHASH;
 
     #[storage]
     struct Storage {
         pool_count: u64,
         pools: Map<u64, Pool>,
-        // pool_participants: Map<u64, Map<u64, Participant>>,
+        pool_participants: Map<u64, Map<u64, Participant>>,
     }
 
     #[abi(embed_v0)]
     impl SaveQuestVaultImpl of IVault<ContractState> {
-        
+        /// @notice Creates a new savings pool and deploys an associated NFT contract
+        /// @dev
+        ///  - Generates a new pool ID from the global counter
+        ///  - Validates caller and contribution amount
+        ///  - Deploys a fresh NFT contract representing participant positions
+        ///  - Initializes NFT metadata (title, symbol, collection URI)
+        ///  - Stores pool configuration in contract state
+        ///  - Increments the global pool counter
+        /// @param _title              Name/title of the pool
+        /// @param _collection_symbol  Symbol for the pool’s NFT collection
+        /// @param _contribution_amount Amount each participant must deposit
+        /// @param _max_participants   Maximum allowed participants in the pool
+        /// @param _deposit_token      ERC20 token contract used for contributions
+        /// @param _yeild_contract     Yield strategy contract where deposits earn yield
+        /// @param _start_date         Pool start timestamp (epoch seconds)
+        /// @param _collection_uri     Metadata URI for the NFT collection
+        /// @return pool_id            Unique identifier for the newly created pool
         fn create_pool(
             ref self: ContractState,
             _title: ByteArray,
@@ -30,9 +50,8 @@ use savequest_contract::{constants::types::{Pool, Participant}, interfaces::{IVa
             _deposit_token: ContractAddress,
             _yeild_contract: ContractAddress,
             _start_date: u64,
-            _collection_uri: ByteArray
+            _collection_uri: ByteArray,
         ) -> u64 {
-
             let _pool_id: u64 = self.pool_count.read();
             let _caller: ContractAddress = get_caller_address();
             let _address_this: ContractAddress = get_contract_address();
@@ -45,14 +64,15 @@ use savequest_contract::{constants::types::{Pool, Participant}, interfaces::{IVa
                 NFT_POSITION_CLASSHASH.try_into().unwrap(),
                 '',
                 array![_address_this.into()].span(),
-                true
+                true,
             );
 
             // unwrap the contract address
             let (nft_position_address, _) = _nft_position.unwrap_syscall();
 
             // initialize the nft metadata
-            INftPosition721Dispatcher{contract_address: nft_position_address}.initialize(_title, _collection_symbol, _collection_uri);
+            INftPosition721Dispatcher { contract_address: nft_position_address }
+                .initialize(_title, _collection_symbol, _collection_uri);
 
             // increment pool count
             let new_pool_id: u64 = _pool_id + 1_u64;
@@ -61,7 +81,8 @@ use savequest_contract::{constants::types::{Pool, Participant}, interfaces::{IVa
             let _new_pool: Pool = Pool {
                 id: new_pool_id,
                 creator: _caller,
-                participants_count: _max_participants,
+                participants_count: 0_u32,
+                max_participants: _max_participants,
                 contribution_amount: _contribution_amount,
                 total_yield_distributed: 0_256,
                 start_timestamp: _start_date,
@@ -71,7 +92,7 @@ use savequest_contract::{constants::types::{Pool, Participant}, interfaces::{IVa
                 deposit_token: _deposit_token,
                 position_nft: _yeild_contract,
                 is_active: true,
-                yeild_contract: _yeild_contract
+                yeild_contract: _yeild_contract,
             };
 
             // make all state changes
@@ -79,8 +100,44 @@ use savequest_contract::{constants::types::{Pool, Participant}, interfaces::{IVa
             self.pool_count.write(new_pool_id);
 
             // emit createPool event
-            
+
             new_pool_id
+        }
+
+        fn join_pool(ref self: ContractState, _pool_id: u64) {
+            let _caller: ContractAddress = get_caller_address();
+            let _address_this: ContractAddress = get_contract_address();
+
+            let mut _pool: Pool = self.pools.read(_pool_id);
+            let _nft_instance = INftPosition721Dispatcher { contract_address: _pool.position_nft };
+            let _deposit_token_instance = IERC20Dispatcher {
+                contract_address: _pool.deposit_token,
+            };
+
+            assert(_caller.is_non_zero(), 'Invalid caller address');
+            assert(_pool.is_active, 'Pool is not active');
+            assert(_pool.participants_count < _pool.max_participants, 'Pool is full');
+            assert(_nft_instance.balance_of(_caller) == 0_u256, 'Already joined');
+            assert(
+                _deposit_token_instance.balance_of(_caller) >= _pool.contribution_amount,
+                'Insufficient balance',
+            );
+            assert(
+                _deposit_token_instance
+                    .allowance(_caller, _address_this) >= _pool
+                    .contribution_amount,
+                'Insufficient allowance',
+            );
+            assert(
+                _deposit_token_instance
+                    .transfer_from(_caller, _address_this, _pool.contribution_amount),
+                'Transfer failed',
+            );
+
+            _nft_instance.safe_mint(_caller);
+
+            _pool.participants_count = _pool.participants_count + 1_u32;
+            self.pools.write(_pool_id, _pool);
         }
     }
 }

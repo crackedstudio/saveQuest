@@ -1,7 +1,11 @@
 [package]
 name = "savequest_contract"
+description = "A decentralized savings platform"
 version = "0.1.0"
 edition = "2024_07"
+authors = [
+    "Mano.dev <manoahluka@gmail.com>"
+]
 
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
@@ -15,12 +19,18 @@ assert_macros = "2.12.2"
 
 [[target.starknet-contract]]
 sierra = true
+casm = true
 
 [scripts]
 test = "snforge test"
 
 [tool.scarb]
 allow-prebuilt-plugins = ["snforge_std"]
+
+[[tool.snforge.fork]]
+name = "SEPOLIA_LATEST"
+url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_9"
+block_id.tag = "latest"
 
 # Visit https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html for more information
 

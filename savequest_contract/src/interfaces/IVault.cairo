@@ -11,6 +11,8 @@ pub trait IVault<TContractState> {
         _deposit_token: ContractAddress,
         _yeild_contract: ContractAddress,
         _start_date: u64,
-        _collection_uri: ByteArray
+        _collection_uri: ByteArray,
     ) -> u64;
+
+    fn join_pool(ref self: TContractState, _pool_id: u64);
 }

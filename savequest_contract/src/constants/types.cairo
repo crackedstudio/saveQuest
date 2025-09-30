@@ -12,11 +12,12 @@ struct VaultInfo {
     is_active: bool,
 }
 
-#[derive(Drop, Serde, starknet::Store)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 pub struct Pool {
     pub id: u64,
     pub creator: ContractAddress,
     pub participants_count: u32,
+    pub max_participants: u32,
     pub contribution_amount: u256,
     pub total_yield_distributed: u256,
     pub start_timestamp: u64,
@@ -26,7 +27,7 @@ pub struct Pool {
     pub deposit_token: ContractAddress,
     pub position_nft: ContractAddress,
     pub is_active: bool,
-    pub yeild_contract: ContractAddress
+    pub yeild_contract: ContractAddress,
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -38,4 +39,5 @@ pub struct Participant {
 }
 
 pub const SAVEQUEST_CLASSHASH: felt252 = 0x0123;
-pub const NFT_POSITION_CLASSHASH: felt252 = 0x0456;
+pub const NFT_POSITION_CLASSHASH: felt252 =
+    0x3b97d6c69365f8be3029b84bd134c08b0994e7550d7d6216808b27c4973f260;

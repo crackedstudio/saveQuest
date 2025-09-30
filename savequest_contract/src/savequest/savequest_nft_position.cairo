@@ -2,7 +2,7 @@
 // Compatible with OpenZeppelin Contracts for Cairo ^2.0.0
 
 #[starknet::contract]
-mod MyToken {
+pub mod NftPosition {
     use openzeppelin::access::ownable::OwnableComponent;
     use openzeppelin::introspection::src5::SRC5Component;
     use openzeppelin::token::erc721::{ERC721Component, ERC721HooksEmptyImpl};
