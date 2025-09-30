@@ -2,7 +2,10 @@
 pub mod SaveQuestVault {
     use core::num::traits::Zero;
     use savequest_contract::constants::types::{Participant, Pool};
-    use savequest_contract::interfaces::IERC20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use savequest_contract::interfaces::{
+        IVToken::{IERC4626Dispatcher, IERC4626DispatcherTrait},
+        IERC20::{IERC20Dispatcher, IERC20DispatcherTrait}
+    };
     use savequest_contract::interfaces::INftPosition::{
         INftPosition721Dispatcher, INftPosition721DispatcherTrait,
     };
@@ -58,32 +61,26 @@ pub mod SaveQuestVault {
 
             assert(_caller.is_non_zero(), 'Invalid caller address');
             assert(_contribution_amount > 0_256, 'Invalid amount');
-
-            // deploy an nft instance for the pool.
             let _nft_position = deploy_syscall(
                 NFT_POSITION_CLASSHASH.try_into().unwrap(),
                 '',
                 array![_address_this.into()].span(),
                 true,
             );
-
-            // unwrap the contract address
             let (nft_position_address, _) = _nft_position.unwrap_syscall();
 
-            // initialize the nft metadata
             INftPosition721Dispatcher { contract_address: nft_position_address }
                 .initialize(_title, _collection_symbol, _collection_uri);
 
-            // increment pool count
             let new_pool_id: u64 = _pool_id + 1_u64;
 
-            // create pool intance
             let _new_pool: Pool = Pool {
                 id: new_pool_id,
                 creator: _caller,
                 participants_count: 0_u32,
                 max_participants: _max_participants,
                 contribution_amount: _contribution_amount,
+                principal_amount: 0_256,
                 total_yield_distributed: 0_256,
                 start_timestamp: _start_date,
                 duration: 0,
@@ -95,7 +92,6 @@ pub mod SaveQuestVault {
                 yeild_contract: _yeild_contract,
             };
 
-            // make all state changes
             self.pools.write(new_pool_id, _new_pool);
             self.pool_count.write(new_pool_id);
 
@@ -103,6 +99,17 @@ pub mod SaveQuestVault {
 
             new_pool_id
         }
+
+        /// @notice Allows a user to join an existing savings pool
+        /// @dev
+        ///  - Validates caller address and pool status
+        ///  - Ensures pool has available participant slots
+        ///  - Verifies caller does not already hold a pool NFT
+        ///  - Checks caller’s ERC20 balance and allowance
+        ///  - Transfers the required contribution amount from caller to pool contract
+        ///  - Mints an NFT position to represent caller’s membership in the pool
+        ///  - Updates the participant count in pool state
+        /// @param _pool_id   The unique identifier of the pool to join
 
         fn join_pool(ref self: ContractState, _pool_id: u64) {
             let _caller: ContractAddress = get_caller_address();
@@ -137,7 +144,29 @@ pub mod SaveQuestVault {
             _nft_instance.safe_mint(_caller);
 
             _pool.participants_count = _pool.participants_count + 1_u32;
+            _pool.principal_amount = _pool.principal_amount + _pool.contribution_amount;
             self.pools.write(_pool_id, _pool);
+
+            if _pool.participants_count == _pool.max_participants {
+                self._deposit_to_yeild(_pool_id);
+            }
+        }
+    }
+
+    #[generate_trait]
+    impl PrivateImpl of PrivateTrait {
+        fn _deposit_to_yeild (ref self: ContractState, _pool_id: u64) {
+            let _address_this = get_contract_address();
+            let _pool: Pool = self.pools.read(_pool_id);
+            let _deposit_token_instance = IERC20Dispatcher { contract_address: _pool.deposit_token };
+            assert(
+                _deposit_token_instance.approve(_pool.yeild_contract, _pool.principal_amount),
+                'Approve failed',
+            );
+            // Call yeild contract deposit method
+            let _yeild_contract_instance = IERC4626Dispatcher { contract_address: _pool.yeild_contract }; 
+
+            _yeild_contract_instance.deposit(_pool.principal_amount, _address_this);
         }
     }
 }

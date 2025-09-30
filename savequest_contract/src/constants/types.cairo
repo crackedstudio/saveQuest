@@ -19,6 +19,7 @@ pub struct Pool {
     pub participants_count: u32,
     pub max_participants: u32,
     pub contribution_amount: u256,
+    pub principal_amount: u256,
     pub total_yield_distributed: u256,
     pub start_timestamp: u64,
     pub duration: u64,
