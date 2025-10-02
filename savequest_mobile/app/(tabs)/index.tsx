@@ -6,8 +6,34 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 import { ICONS } from "@/constants/icons";
+import { useAccount } from "@/context/UserContext";
+import { useState } from "react";
 
 export default function Index() {
+  const {account} = useAccount();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const createPool = async () => {
+
+    if (!account) return;
+
+    setIsLoading(true);
+
+    try {
+       const result = await account.execute(
+        '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
+        'transfer',
+        ['0x06d8DB0f52F20bCEd72101016a079180879187D91A408811f0fb2c0184CdbBd1', '1000000000000000000', '0'],
+        false // Require biometric authentication
+      );
+      
+      console.log('Transaction successful:', result);
+      
+    } catch (error) {
+        console.error("Error creating pool:", error);
+    }
+  }
+
   return (
     <SafeAreaView className="w-full h-full bg-primary">
       <ScrollView className="w-full h-full p-[24px] ">
@@ -26,6 +52,10 @@ export default function Index() {
                   $8,847.92
                 </Text>
                 <Text className="text-text text-[12px]">Active in 2 pools</Text>
+                <Text>Address: {account?.address}</Text>
+                <Text>Network: {account?.network}</Text>
+                <Text>Email: {account?.email}</Text>
+        
               </View>
             </View>
 
