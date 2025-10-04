@@ -1,4 +1,4 @@
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Button, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import "./pools";
 import { Link } from "expo-router";
 import {
@@ -21,13 +21,25 @@ export default function Index() {
 
     try {
        const result = await account.execute(
-        '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
-        'transfer',
-        ['0x06d8DB0f52F20bCEd72101016a079180879187D91A408811f0fb2c0184CdbBd1', '1000000000000000000', '0'],
+        '0x049cb7d3b96ac799ad408ce6a543cff1445ed455f69ea3609a7a7aaafa80d3a7',
+        // '0x0702c1fb5e7b53d57ca091184e4c76f75f0f7346a2dbc13909f6bd538cae9059',
+        'create_pool',
+        // 'set_counter',
+        [
+          "firstpool",
+          "fpm",
+          100,
+          10,
+          '0x0054bd06a78db79f274984edf6907148c57af42f06ffd9a764ffe40ed9e0129b',
+          '0x0341e472cdfe6fc6a6d9684d26f1028b177c48a52ffd4c847fea60e66b21a455',
+          98765432123,
+          "ipfs://test-uri-metadata-hash",
+        ],
         false // Require biometric authentication
       );
       
       console.log('Transaction successful:', result);
+      console.log(account?.address)
       
     } catch (error) {
         console.error("Error creating pool:", error);
@@ -45,16 +57,16 @@ export default function Index() {
             </View>
           </View>
           <View className="flex flex-col gap-y-2">
-            <View className="flex flex-col w-full gap-y-2 h-[120px] border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2">
+            <View className="flex flex-col w-full h-[120px] gap-y-2  border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2">
               <View className="border w-full h-full p-[16px] rounded-[12px] border-highlight">
                 <Text className="text-white font-bold text-[16px]">POOL BALANCE</Text>
                 <Text className="text-white font-bold text-[24px]">
                   $8,847.92
                 </Text>
                 <Text className="text-text text-[12px]">Active in 2 pools</Text>
-                <Text>Address: {account?.address}</Text>
-                <Text>Network: {account?.network}</Text>
-                <Text>Email: {account?.email}</Text>
+                <Text className="text-white">Address: {account?.address}</Text>
+                <Text className="text-white">Network: {account?.network}</Text>
+                <Text className="text-white">Email: {account?.email}</Text>
         
               </View>
             </View>
@@ -97,6 +109,14 @@ export default function Index() {
                 CREATE POOL
               </Link>
             </TouchableOpacity>
+
+            <Button
+              title="execute"
+              onPress={() => {
+                createPool();
+                alert("done")
+              }}
+            />
           </View>
 
           <View className="flex flex-col gap-y-4">
