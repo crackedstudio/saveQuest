@@ -1,151 +1,127 @@
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link } from "expo-router";
 
-const savings = () => {
+export default function Savings() {
   return (
     <SafeAreaView className="w-full h-full bg-primary">
-      <ScrollView >
-        <View className="h-full p-4 gap-y-4 flex flex-col">
-        <View className="flex flex-col w-full h-[120px] border-r-[8px] border-b-[8px] rounded-[16px] justify-center gap-y-2">
-          <View className="border w-full h-full p-[16px] gap-y-2 rounded-[12px] bg-bg">
-            <Text className="text-white font-bold">TOTAL SAVINGS</Text>
-            <Text className="text-white font-bold text-[24px]">$4,000.00</Text>
-            <Text className="text-text">Personal Vault balance</Text>
-          </View>
+      <ScrollView className="p-[24px]" contentContainerStyle={{ paddingBottom: 40 }}>
+        {/* Header */}
+        <View className="flex flex-row items-center justify-between mb-4">
+          <View className="w-[44px]" />
+          <Text className="text-white text-[22px] font-extrabold">MY SAVINGS</Text>
+          <View className="w-[44px]" />
         </View>
 
-        <View className="flex w-full h-[108px] flex-row gap-x-2">
-          <View className="w-1/2 border rounded-[12px] border h-[108px] border-r-[8px] border-b-[8px] rounded-[16px] flex flex-col items-center justify-center">
-            <Text className="text-accent font-bold text-[16px]">ADD FUNDS</Text>
-          </View>
-
-          <View className="w-1/2 border rounded-[12px] border h-[108px] border-r-[8px] border-b-[8px] rounded-[16px] flex flex-col items-center justify-center">
-            <Text className="text-secondary font-bold text-[16px]">
-              WITHDRAW
-            </Text>
-          </View>
+        {/* Total Savings */}
+        <View className="bg-bg rounded-2xl p-[16px] shadow-custom">
+          <Text className="text-white font-extrabold text-[14px]">TOTAL SAVINGS</Text>
+          <Text className="text-white font-extrabold text-[28px] mt-1">$4,000.00</Text>
+          <Text className="text-text">Personal vault balance</Text>
         </View>
 
-        <View className="flex flex-col gap-y-2">
-          <Text className="text-white font-[900px] text-[18px]">
-            SAVINGS BREAKDOWN
-          </Text>
+        {/* Actions */}
+        <View className="flex-row gap-x-3 mt-4">
+          <TouchableOpacity className="flex-1 bg-bg rounded-2xl h-[96px] items-center justify-center">
+            <Text className="text-accent font-extrabold text-[16px]">ADD FUNDS</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="flex-1 bg-bg rounded-2xl h-[96px] items-center justify-center">
+            <Text className="text-secondary font-extrabold text-[16px]">WITHDRAW</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View className="flex flex-row justify-around p-[14px] h-[90px] w-full border-shadow-secondary bg-[#FFFFFF1A] rounded-[12px] border-l-[8px]">
-            <View className="w-[38px] h-[38px] bg-secondary rounded-lg"></View>
-            <View className="flex flex-col">
-              <Text className="text-white font-bold text-[16px]">
-                Stablecoins
-              </Text>
-              <Text className="text-text text-[12px]">USDC + USDT</Text>
+        {/* Breakdown */}
+        <View className="mt-6 gap-y-3">
+          <Text className="text-white text-[18px] font-extrabold">SAVINGS BREAKDOWN</Text>
+
+          <View className="flex flex-row items-center gap-x-3 p-[14px] bg-[#FFFFFF1A] rounded-[12px] border-l-[8px] border-secondary">
+            <View className="w-[38px] h-[38px] bg-secondary rounded-lg" />
+            <View className="flex-1">
+              <Text className="text-white font-extrabold text-[16px]">USDC Savings</Text>
+              <Text className="text-text text-[12px]">Stablecoin vault</Text>
+              <View className="h-[8px] bg-[#5A5A5A] rounded-full mt-2 overflow-hidden"><View className="h-full w-[62%] bg-[#AAAAAA]" /></View>
             </View>
-            <View className="flex flex-col">
-              <Text className="text-white font-bold text-[18px]">
-                $5,847.92
-              </Text>
-              <Text className="text-secondary text-right text-[12px]">
-                + 4.2% APY
-              </Text>
+            <View className="items-end">
+              <Text className="text-white font-extrabold text-[18px]">$2,500.00</Text>
+              <Text className="text-secondary text-[12px]">62.5%</Text>
             </View>
           </View>
 
-          <View className="flex flex-row justify-around p-[14px] h-[90px] w-full border-shadow-accent bg-[#FFFFFF1A] rounded-[12px] border-l-[8px]">
-            <View className="w-[38px] h-[38px] bg-accent rounded-lg"></View>
-            <View className="flex flex-col">
-              <Text className="text-white font-bold text-[16px]">
-                BTC Vault
-              </Text>
-              <Text className="text-text text-[12px]">Bitcoin savings</Text>
+          <View className="flex flex-row items-center gap-x-3 p-[14px] bg-[#FFFFFF1A] rounded-[12px] border-l-[8px] border-accent">
+            <View className="w-[38px] h-[38px] bg-accent rounded-lg" />
+            <View className="flex-1">
+              <Text className="text-white font-extrabold text-[16px]">BTC Savings</Text>
+              <Text className="text-text text-[12px]">Bitcoin vault</Text>
+              <View className="h-[8px] bg-[#5A5A5A] rounded-full mt-2 overflow-hidden"><View className="h-full w-[38%] bg-[#AAAAAA]" /></View>
             </View>
-            <View className="flex flex-col">
-              <Text className="text-white font-bold text-[18px]">
-                $5,847.92
-              </Text>
-              <Text className="text-accent text-right text-[12px]">
-                + 4.2% APY
-              </Text>
+            <View className="items-end">
+              <Text className="text-white font-extrabold text-[18px]">$1,500.00</Text>
+              <Text className="text-accent text-[12px]">37.5%</Text>
             </View>
           </View>
         </View>
 
-        <View className="flex flex-col gap-y-4">
-          <View className=" flex flex-row justify-between w-full">
-            <Text className="text-white text-[18px] font-[900px]">
-              SAVINGS GOALS
-            </Text>
-            <TouchableOpacity className="bg-secondary px-[15px] py-[10px] rounded-[8px]">
-              <Link href="/" className="text-[14px] font-[900px]">
-                NEW GOAL
-              </Link>
-            </TouchableOpacity>
+        {/* Goals */}
+        <View className="mt-6 gap-y-3">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-white text-[18px] font-extrabold">SAVINGS GOALS</Text>
+            <TouchableOpacity className="bg-secondary px-[15px] py-[10px] rounded-[10px]"><Text className="text-black font-extrabold">+ NEW GOAL</Text></TouchableOpacity>
           </View>
 
-          <View className="flex flex-col gap-y-2">
-            <View className="flex flex-col border rounded-[12px] h-[144px] p-[20px] gap-y-2 bg-cardbg border-highlight">
-              <View className="flex flex-row justify-between items-center">
-                <View className="flex flex-col gap-y-1">
-                  <Text className="text-white text-[16px] font-[900px]">
-                    Emergency Fund
-                  </Text>
-                  <Text className="text-text font-[700px]">Target: $1000</Text>
-                </View>
-                <Text className="text-white font-[900px] text-[20px]">40%</Text>
+          <View className="bg-cardbg rounded-2xl p-[16px] border border-highlight">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-white text-[16px] font-extrabold">Emergency Fund</Text>
+                <Text className="text-text">Target: $10,000</Text>
               </View>
+              <Text className="text-white text-[20px] font-extrabold">40%</Text>
             </View>
+            <View className="h-[10px] bg-[#3a3a3a] rounded-full mt-3 overflow-hidden"><View className="h-full w-[40%] bg-[#777]" /></View>
+            <Text className="text-text mt-2">$4,000 of $10,000</Text>
           </View>
 
-          <View className="flex flex-col border rounded-[12px] h-[144px] p-[20px] gap-y-2 bg-cardbg border-secondary">
-            <View className="flex flex-row justify-between items-center">
-              <View className="flex flex-col gap-y-1">
-                <Text className="text-white text-[16px] font-[900px]">
-                  Vacation Fund
-                </Text>
-                <Text className="text-text font-[700px]">Target: $5000</Text>
+          <View className="bg-cardbg rounded-2xl p-[16px] border border-secondary/40">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-white text-[16px] font-extrabold">Vacation Fund</Text>
+                <Text className="text-text">Target: $5,000</Text>
               </View>
-              <Text className="text-white font-[900px] text-[20px]">0%</Text>
+              <Text className="text-white text-[20px] font-extrabold">0%</Text>
             </View>
-          </View>
-        </View>
-
-        <View className="flex flex-col gap-y-4">
-          <Text className="text-white text-[18px] font-[900px]">
-            RECENT ACTIVITY
-          </Text>
-
-          <View className="flex flex-col gap-y-2">
-            <View className="p-[16px] flex flex-row justify-between items-center h-[76px] bg-bg rounded-[8px]">
-              <View className="flex flex-row gap-x-2">
-                <View className="w-[40px] h-[40px] rounded-full bg-secondary">
-
-                </View>
-                <View className="flex flex-col gap-y-1">
-                  <Text className="text-white font-[900px] text[16px]">Deposit</Text>
-                  <Text className="text-text text-[14px] font-[700px]">Dec 15, 2025</Text>
-                </View>
-              </View>
-              <Text className="text-secondary text-[14px] font-[900px]">+ $5000.00</Text>
-            </View>
-
-            <View className="p-[16px] flex flex-row justify-between items-center h-[76px] bg-bg rounded-[8px]">
-              <View className="flex flex-row gap-x-2">
-                <View className="w-[40px] h-[40px] rounded-full bg-accent">
-
-                </View>
-                <View className="flex flex-col gap-y-1">
-                  <Text className="text-white font-[900px] text[16px]">Deposit</Text>
-                  <Text className="text-text text-[14px] font-[700px]">Dec 15, 2025</Text>
-                </View>
-              </View>
-              <Text className="text-accent text-[14px] font-[900px]">+ $5000.00</Text>
-            </View>
+            <View className="h-[10px] bg-[#3a3a3a] rounded-full mt-3 overflow-hidden" />
+            <Text className="text-text mt-2">$0 of $5,000</Text>
           </View>
         </View>
+
+        {/* Recent Activity */}
+        <View className="mt-6 gap-y-3">
+          <Text className="text-white text-[18px] font-extrabold">RECENT ACTIVITY</Text>
+
+          <View className="p-[16px] flex flex-row justify-between items-center h-[76px] bg-bg rounded-[12px]">
+            <View className="flex flex-col">
+              <Text className="text-white text-[16px] font-extrabold">Deposit</Text>
+              <Text className="text-text text-[14px]">Dec 15, 2024</Text>
+            </View>
+            <Text className="text-secondary text-[16px] font-extrabold">+$500.00</Text>
+          </View>
+
+          <View className="p-[16px] flex flex-row justify-between items-center h-[76px] bg-bg rounded-[12px]">
+            <View className="flex flex-col">
+              <Text className="text-white text-[16px] font-extrabold">Deposit</Text>
+              <Text className="text-text text-[14px]">Dec 10, 2024</Text>
+            </View>
+            <Text className="text-accent text-[16px] font-extrabold">+$1,000.00</Text>
+          </View>
+
+          <View className="p-[16px] flex flex-row justify-between items-center h-[76px] bg-bg rounded-[12px]">
+            <View className="flex flex-col">
+              <Text className="text-white text-[16px] font-extrabold">Goal Created</Text>
+              <Text className="text-text text-[14px]">Dec 5, 2024</Text>
+            </View>
+            <Text className="text-accent text-[16px] font-extrabold">Emergency Fund</Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-};
-
-export default savings;
+}

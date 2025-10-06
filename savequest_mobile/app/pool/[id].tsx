@@ -1,0 +1,159 @@
+import React from 'react'
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useLocalSearchParams, router } from 'expo-router'
+
+// Mock dataset for details
+const mockPools: Record<string, {
+  title: string;
+  subtitle: string;
+  color: 'secondary' | 'accent';
+  total: string;
+  members: number;
+  yieldAccrued: string;
+  nextRecipient: string;
+  daysRemaining: number;
+  contributions: string;
+  apy: string;
+  memberList: Array<{ name: string; }>;
+  activity: Array<{ id: string; type: 'deposit' | 'yield' | 'payout'; amount: string; date: string; accent: 'secondary' | 'accent'; }>;
+}> = {
+  'stablecoin-squad': {
+    title: 'Stablecoin Squad',
+    subtitle: 'USDC Pool',
+    color: 'secondary',
+    total: '$2,500',
+    members: 8,
+    yieldAccrued: '+$187.50',
+    nextRecipient: 'Sarah M.',
+    daysRemaining: 18,
+    contributions: '$2,312.50',
+    apy: '4.2% APY',
+    memberList: [
+      { name: 'Sarah M.' },
+      { name: 'Ayo B.' },
+      { name: 'Ken I.' },
+      { name: 'You' },
+    ],
+    activity: [
+      { id: 'a1', type: 'deposit', amount: '+$200.00', date: 'Dec 15, 2024', accent: 'secondary' },
+      { id: 'a2', type: 'yield', amount: '+$28.75', date: 'Dec 12, 2024', accent: 'secondary' },
+      { id: 'a3', type: 'payout', amount: 'Paid to Alex', date: 'Dec 01, 2024', accent: 'accent' },
+    ],
+  },
+  'bitcoin-builders': {
+    title: 'Bitcoin Builders',
+    subtitle: 'BTC Pool',
+    color: 'accent',
+    total: '$1,800',
+    members: 6,
+    yieldAccrued: '+$234.67',
+    nextRecipient: 'You!',
+    daysRemaining: 4,
+    contributions: '$1,565.33',
+    apy: '3.6% APY',
+    memberList: [
+      { name: 'You' },
+      { name: 'Ada L.' },
+      { name: 'Mike T.' },
+    ],
+    activity: [
+      { id: 'b1', type: 'deposit', amount: '+$150.00', date: 'Dec 10, 2024', accent: 'accent' },
+      { id: 'b2', type: 'yield', amount: '+$18.20', date: 'Dec 08, 2024', accent: 'secondary' },
+    ],
+  },
+};
+
+export default function PoolDetails() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const data = mockPools[id ?? ''] ?? mockPools['stablecoin-squad'];
+
+  return (
+    <SafeAreaView className="w-full h-full bg-primary">
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <View className="p-[24px] gap-y-6">
+        <View className="flex flex-row items-center justify-between">
+          <TouchableOpacity className="w-[44px] h-[44px] rounded-lg bg-bg items-center justify-center" onPress={() => router.back()}>
+            <Text className="text-white">←</Text>
+          </TouchableOpacity>
+          <Text className="text-white text-[22px] font-bold">Pool Details</Text>
+          <View className="w-[44px]" />
+        </View>
+
+        <View className={`bg-bg rounded-2xl p-[20px] border-l-[8px] ${data.color === 'secondary' ? 'border-secondary' : 'border-accent'}`}>
+          <Text className="text-white text-[24px] font-bold">{data.title}</Text>
+          <Text className="text-text text-[14px]">{data.subtitle}</Text>
+          <View className="flex flex-row justify-between items-end mt-4">
+            <View>
+              <Text className="text-text text-[14px]">Total Value</Text>
+              <Text className={`text-[28px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}>{data.total}</Text>
+            </View>
+            <Text className="text-text text-[16px]">{data.members} members</Text>
+          </View>
+
+          <View className="mt-6">
+            <Text className="text-white text-[18px] font-bold mb-2">Next Yield Recipient</Text>
+            <View className="flex flex-row justify-between items-center">
+              <Text className={`text-[18px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}>{data.nextRecipient}</Text>
+              <Text className="text-text text-[16px]">{data.daysRemaining} days remaining</Text>
+            </View>
+            <View className="w-full h-[14px] bg-[#5A5A5A] rounded-full overflow-hidden mt-3">
+              <View className={`h-full w-[60%] ${data.color === 'secondary' ? 'bg-secondary' : 'bg-accent'}`} />
+            </View>
+            <Text className="text-text mt-2">Next distribution in {data.daysRemaining} days</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity className="bg-secondary rounded-xl py-[14px] items-center">
+          <Text className="text-black text-[18px] font-extrabold">Join / Manage</Text>
+        </TouchableOpacity>
+
+        {/* Stats */}
+        <View className="flex flex-row gap-x-3">
+          <View className="flex-1 bg-bg rounded-xl p-[16px]">
+            <Text className="text-text text-[12px]">Contributions</Text>
+            <Text className="text-white text-[18px] font-bold">{data.contributions}</Text>
+          </View>
+          <View className="flex-1 bg-bg rounded-xl p-[16px]">
+            <Text className="text-text text-[12px]">Yield Accrued</Text>
+            <Text className={`${data.color === 'secondary' ? 'text-secondary' : 'text-accent'} text-[18px] font-bold`}>{data.yieldAccrued}</Text>
+          </View>
+          <View className="flex-1 bg-bg rounded-xl p-[16px]">
+            <Text className="text-text text-[12px]">Rate</Text>
+            <Text className="text-white text-[18px] font-bold">{data.apy}</Text>
+          </View>
+        </View>
+
+        {/* Members */}
+        <View className="bg-bg rounded-2xl p-[20px] gap-y-3">
+          <Text className="text-white text-[18px] font-bold">Members</Text>
+          <View className="flex flex-row flex-wrap gap-2">
+            {data.memberList.map((m) => (
+              <View key={m.name} className={`${data.color === 'secondary' ? 'bg-[#184242]' : 'bg-[#4B3425]'} px-[12px] py-[10px] rounded-xl`}>
+                <Text className="text-white text-[14px] font-bold">{m.name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Activity */}
+        <View className="gap-y-3">
+          <Text className="text-white text-[18px] font-bold">Recent Activity</Text>
+          {data.activity.map((a) => (
+            <View key={a.id} className="p-[16px] flex flex-row justify-between items-center h-[76px] bg-bg rounded-[12px]">
+              <View className="flex flex-col">
+                <Text className="text-white text-[16px] font-extrabold">{a.type === 'deposit' ? 'Deposit' : a.type === 'yield' ? 'Yield' : 'Payout'}</Text>
+                <Text className="text-text text-[14px]">{a.date}</Text>
+              </View>
+              <Text className={`${a.accent === 'secondary' ? 'text-secondary' : 'text-accent'} text-[16px] font-extrabold`}>{a.amount}</Text>
+            </View>
+          ))}
+        </View>
+
+      </View>
+      </ScrollView>
+    </SafeAreaView>
+  )
+}
+
+
