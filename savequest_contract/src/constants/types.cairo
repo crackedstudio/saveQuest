@@ -31,7 +31,7 @@ pub struct Pool {
     pub yeild_contract: ContractAddress,
 }
 
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde, starknet::Store)]
 pub struct Participant {
     pub addr: ContractAddress,
     pub deposited: u256,

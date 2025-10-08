@@ -21,7 +21,7 @@ export default function Index() {
     try {
        const result = await account.execute(
         '0x06940bf1022c25fe4feca4e869c18a1d8f6e10330909a086e761d1d5fbb0c857',
-        "create_pool",
+        'create_pool',
         [
           "firstpool",
           "fpm",
@@ -29,8 +29,8 @@ export default function Index() {
           10,
           '0x0054bd06a78db79f274984edf6907148c57af42f06ffd9a764ffe40ed9e0129b',
           '0x0341e472cdfe6fc6a6d9684d26f1028b177c48a52ffd4c847fea60e66b21a455',
-          98765432123,
-          "ipfs://test-uri-metadata-hash",
+          987654321,
+          "ipfs://test-uri-metadata-hash"
         ],
         false // Require biometric authentication
       );

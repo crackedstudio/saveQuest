@@ -43,7 +43,7 @@ pub mod SaveQuestVault {
         upgradeable: UpgradeableComponent::Storage,
         pool_count: u64,
         pools: Map<u64, Pool>,
-        pool_participants: Map<u64, Map<u64, Participant>>,
+        pool_participants: Map::<(u64, u32), Participant>,
     }
 
     #[abi(embed_v0)]
@@ -89,8 +89,8 @@ pub mod SaveQuestVault {
                 true,
             ).unwrap_syscall();
 
-            INftPosition721Dispatcher { contract_address: _nft_position_address }
-                .initialize(_title, _collection_symbol, _collection_uri);
+            // INftPosition721Dispatcher { contract_address: _nft_position_address }
+            //     .initialize(_title, _collection_symbol, _collection_uri);
 
             let new_pool_id: u64 = _pool_id + 1_u64;
 
@@ -166,15 +166,60 @@ pub mod SaveQuestVault {
                 'Transfer failed',
             );
 
+            let _participant: Participant = Participant {
+                addr: _caller,
+                deposited: _pool.contribution_amount,
+                has_claimed: false,
+                withdrawn: false,
+            };
+
             _nft_instance.safe_mint(_caller);
 
             _pool.participants_count = _pool.participants_count + 1_u32;
             _pool.principal_amount = _pool.principal_amount + _pool.contribution_amount;
+            self.pool_participants.write((_pool_id, _pool.participants_count), _participant);
             self.pools.write(_pool_id, _pool);
-
             if _pool.participants_count == _pool.max_participants {
                 self._deposit_to_yeild(_pool_id);
             }
+        }
+
+
+        // ==== GETTER FUNCTIONS ====
+        fn get_pool(self: @ContractState, _pool_id: u64) -> Pool {
+            self.pools.read(_pool_id)
+        }
+
+        fn get_all_pools(self: @ContractState) -> Array<Pool> {
+            let mut _all_pools = array![];
+            let mut i = 1;
+            let _player_count = self.pool_count.read();
+
+            while i < _player_count + 1_u64 {
+                let _pool = self.pools.read(i);
+                _all_pools.append(_pool);
+                i = i + 1;
+            }
+
+            _all_pools
+        }
+
+        fn get_participant(self: @ContractState, _pool_id: u64, _participant_id: u32) -> Participant {
+            self.pool_participants.read((_pool_id, _participant_id))
+        }
+
+        fn get_all_participants(self: @ContractState, _pool_id: u64) -> Array<Participant> {
+            let mut _all_participants = array![];
+            let mut i = 1;
+            let _participant_count = self.pools.read(_pool_id).participants_count;
+
+            while i < _participant_count + 1_u32 {
+                let _participant = self.pool_participants.read((_pool_id, i));
+                _all_participants.append(_participant);
+                i = i + 1;
+            }
+
+            _all_participants
         }
     }
 
