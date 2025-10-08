@@ -20,10 +20,8 @@ export default function Index() {
 
     try {
        const result = await account.execute(
-        '0x049cb7d3b96ac799ad408ce6a543cff1445ed455f69ea3609a7a7aaafa80d3a7',
-        // '0x0702c1fb5e7b53d57ca091184e4c76f75f0f7346a2dbc13909f6bd538cae9059',
-        'create_pool',
-        // 'set_counter',
+        '0x06940bf1022c25fe4feca4e869c18a1d8f6e10330909a086e761d1d5fbb0c857',
+        "create_pool",
         [
           "firstpool",
           "fpm",
@@ -38,7 +36,6 @@ export default function Index() {
       );
       
       console.log('Transaction successful:', result);
-      console.log(account?.address)
       
     } catch (error) {
         console.error("Error creating pool:", error);
@@ -88,6 +85,9 @@ export default function Index() {
             <TouchableOpacity className="w-full bg-bg h-[64px] justify-center items-center rounded-[16px]">
               <Link className="text-white font-extrabold text-[18px]" href="/create-pool/info">✚ CREATE POOL</Link>
             </TouchableOpacity>
+
+            <Button title="Create Poolss" onPress={createPool} />
+
           </View>
 
           {/* Your Pools */}

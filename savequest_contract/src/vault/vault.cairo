@@ -15,11 +15,32 @@ pub mod SaveQuestVault {
         StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait,
     };
     use starknet::syscalls::deploy_syscall;
-    use starknet::{ContractAddress, SyscallResultTrait, get_caller_address, get_contract_address};
+    use starknet::{ContractAddress, SyscallResultTrait, get_caller_address, get_contract_address, class_hash::ClassHash};
     use crate::constants::types::NFT_POSITION_CLASSHASH;
+    use openzeppelin::upgrades::{interface::IUpgradeable, UpgradeableComponent};
+
+    component!(path: UpgradeableComponent, storage: upgradeable, event: UpgradeableEvent);
+
+    // events
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        CreatePoolEvent: CreatePoolEvent,
+        #[flat]
+        UpgradeableEvent: UpgradeableComponent::Event,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct CreatePoolEvent {
+        pool_id: u64,
+        creator: ContractAddress,
+        participants_count: u32,
+    }
 
     #[storage]
     struct Storage {
+        #[substorage(v0)]
+        upgradeable: UpgradeableComponent::Storage,
         pool_count: u64,
         pools: Map<u64, Pool>,
         pool_participants: Map<u64, Map<u64, Participant>>,
@@ -60,16 +81,15 @@ pub mod SaveQuestVault {
             let _address_this: ContractAddress = get_contract_address();
 
             assert(_caller.is_non_zero(), 'Invalid caller address');
-            assert(_contribution_amount > 0_256, 'Invalid amount');
-            let _nft_position = deploy_syscall(
+            assert(_contribution_amount > 0_u256, 'Invalid amount');
+            let (_nft_position_address, _ ) = deploy_syscall(
                 NFT_POSITION_CLASSHASH.try_into().unwrap(),
-                '',
+                _caller.into(),
                 array![_address_this.into()].span(),
                 true,
-            );
-            let (nft_position_address, _) = _nft_position.unwrap_syscall();
+            ).unwrap_syscall();
 
-            INftPosition721Dispatcher { contract_address: nft_position_address }
+            INftPosition721Dispatcher { contract_address: _nft_position_address }
                 .initialize(_title, _collection_symbol, _collection_uri);
 
             let new_pool_id: u64 = _pool_id + 1_u64;
@@ -80,8 +100,8 @@ pub mod SaveQuestVault {
                 participants_count: 0_u32,
                 max_participants: _max_participants,
                 contribution_amount: _contribution_amount,
-                principal_amount: 0_256,
-                total_yield_distributed: 0_256,
+                principal_amount: 0_u256,
+                total_yield_distributed: 0_u256,
                 start_timestamp: _start_date,
                 duration: 0,
                 last_harvest_timestamp: 0,
@@ -96,6 +116,11 @@ pub mod SaveQuestVault {
             self.pool_count.write(new_pool_id);
 
             // emit createPool event
+            self.emit(CreatePoolEvent {
+                pool_id: new_pool_id,
+                creator: _caller,
+                participants_count: 0_u32,
+            });
 
             new_pool_id
         }
@@ -169,4 +194,14 @@ pub mod SaveQuestVault {
             _yeild_contract_instance.deposit(_pool.principal_amount, _address_this);
         }
     }
+
+    #[abi(embed_v0)]
+    impl UpgradeableImpl of IUpgradeable<ContractState> {
+        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            // let caller = get_caller_address();
+            self.upgradeable.upgrade(new_class_hash);
+        }
+    }
+
+    impl UpgradeableInternalImpl = UpgradeableComponent::InternalImpl<ContractState>;
 }
