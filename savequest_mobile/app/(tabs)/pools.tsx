@@ -8,18 +8,19 @@ import { useAegis } from "@cavos/aegis";
 const pools = () => {
 
   const { aegisAccount } = useAegis();
-  const [pools, setPools] = useState([])
+  const [pools, setPools] = useState();
 
   const getPools = async () => {
     if (!aegisAccount?.isWalletConnected()) return;
     const result = await aegisAccount.call(
-      '0x00aff32441e682601f203dcdfec4f823f8f11f44b4660a0c42acc4780fd59bbf',
+      '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b',
       'get_all_pools',
       [],
     );
-    console.log('Pools:', result);
+    console.log('Pools: raw:', result);
     setPools(result)
     alert(result)
+    console.log(result)
   }
 
   useEffect(() => {
@@ -92,7 +93,7 @@ const pools = () => {
         </View>
       </View>)
         }
-        // keyExtractor = {pools => pool.id}
+        keyExtractor = {pool => pool.id}
       />
 
 
@@ -118,7 +119,7 @@ const pools = () => {
           </View>
           <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
             <View className='h-full w-[65%] bg-black' />
-          </View>
+          </View>npm
           <Text className='text-text text-[12px] mt-2'>18 days remaining</Text>
         </View>
 

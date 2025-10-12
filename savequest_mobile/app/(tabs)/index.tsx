@@ -12,36 +12,8 @@ import {cairo} from "starknet";
 
 export default function Index() {
   // const {account} = useAccount();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { aegisAccount } = useAegis();
 
-  const createPool = async () => {
-
-    if (!aegisAccount.isConnected) return;
-
-    setIsLoading(true);
-
-    try {
-       const result = await aegisAccount.execute(
-        "0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b",
-        "create_pool",
-        [
-          cairo.felt('fristpool'),
-          cairo.felt('xyzt'),
-          cairo.uint256(100),
-          "10",
-          "0x0054bd06a78db79f274984edf6907148c57af42f06ffd9a764ffe40ed9e0129b",
-          "0x0341e472cdfe6fc6a6d9684d26f1028b177c48a52ffd4c847fea60e66b21a455",
-          "98765432109890"
-        ],
-      );
-      
-      console.log('Transaction successful:', result);
-      
-    } catch (error) {
-        console.error("Error creating pool:", error);
-    }
-  }
+  const {aegisAccount} = useAegis();
 
   return (
     <SafeAreaView className="w-full h-full bg-primary">
@@ -87,7 +59,7 @@ export default function Index() {
               <Link className="text-white font-extrabold text-[18px]" href="/create-pool/info">✚ CREATE POOL</Link>
             </TouchableOpacity>
 
-            <Button title="Create Poolss" onPress={createPool} />
+            {/* <Button title="Create Poolss" onPress={createPool} /> */}
 
           </View>
 

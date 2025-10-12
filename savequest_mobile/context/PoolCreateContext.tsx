@@ -1,26 +1,48 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
+import { getTokenAddress, getYieldContractAddress } from '@/utils/tokenAddresses'
 
 export type TokenType = 'USDT' | 'USDC' | 'BTC'
 export type GroupType = 'closed' | 'open'
+export type YieldContractType = 'COMPOUND' | 'AAVE' | 'YIELD_PROTOCOL'
 
 export type Member = { id: string; handle: string }
 
 export type CreatePoolState = {
+  // Basic pool info
   poolName: string
+  collectionSymbol: string
   token: TokenType
   groupType: GroupType
   members: Member[]
-  monthlyContribution: number
+  
+  // Pool configuration
+  contributionAmount: number
+  maxParticipants: number
   startDateISO: string
+  
+  // Contract addresses
+  depositTokenAddress: string
+  yieldContractType: YieldContractType
+  yieldContractAddress: string
 }
 
 const defaultState: CreatePoolState = {
+  // Basic pool info
   poolName: '',
+  collectionSymbol: '',
   token: 'USDT',
   groupType: 'closed',
   members: [],
-  monthlyContribution: 500,
+  
+  // Pool configuration
+  contributionAmount: 500,
+  maxParticipants: 5,
   startDateISO: new Date().toISOString(),
+  
+  // Contract addresses (automatically set based on selections)
+  depositTokenAddress: getTokenAddress('USDT'),
+  yieldContractType: 'COMPOUND',
+  yieldContractAddress: getYieldContractAddress('COMPOUND'),
 }
 
 type Ctx = {

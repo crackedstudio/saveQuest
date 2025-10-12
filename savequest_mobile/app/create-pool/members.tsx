@@ -7,6 +7,7 @@ import { usePoolCreate } from '@/context/PoolCreateContext'
 export default function AddMembers() {
   const { state, setState } = usePoolCreate()
   const [handle, setHandle] = useState('')
+  const [maxParticipants, setMaxParticipants] = useState(String(state.maxParticipants))
 
   const add = () => {
     if (!handle.trim()) return
@@ -14,7 +15,11 @@ export default function AddMembers() {
     setHandle('')
   }
 
-  const proceed = () => router.push('/create-pool/setup')
+  const proceed = () => {
+    const max = parseInt(maxParticipants || '5', 10)
+    setState((s) => ({ ...s, maxParticipants: isNaN(max) ? 5 : max }))
+    router.push('/create-pool/setup')
+  }
 
   return (
     <SafeAreaView className="w-full h-full bg-primary">
@@ -28,6 +33,21 @@ export default function AddMembers() {
         </View>
 
         <View className="bg-bg rounded-2xl p-[20px]">
+          <Text className="text-white text-[18px] font-extrabold mb-3">POOL SETTINGS</Text>
+          <Text className="text-text mb-2">MAX PARTICIPANTS</Text>
+          <View className="rounded-xl border border-secondary px-3 mb-4">
+            <TextInput 
+              placeholder="5" 
+              placeholderTextColor="#AAAAAA" 
+              className="text-white h-[48px]" 
+              value={maxParticipants} 
+              onChangeText={setMaxParticipants}
+              keyboardType="number-pad"
+            />
+          </View>
+        </View>
+
+        {/* <View className="bg-bg rounded-2xl p-[20px] mt-5">
           <Text className="text-white text-[18px] font-extrabold mb-3">ADD MEMBER</Text>
           <Text className="text-text mb-2">WALLET ADDRESS OR USERNAME</Text>
           <View className="rounded-xl border border-secondary px-3 mb-3">
@@ -50,10 +70,10 @@ export default function AddMembers() {
               </View>
             ))}
           </View>
-        </View>
+        </View> */}
 
         <TouchableOpacity onPress={proceed} className="bg-secondary rounded-2xl mt-8 h-[56px] items-center justify-center">
-          <Text className="text-black text-[18px] font-extrabold">NEXT: ROTATION SETUP</Text>
+          <Text className="text-black text-[18px] font-extrabold">Finalize</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

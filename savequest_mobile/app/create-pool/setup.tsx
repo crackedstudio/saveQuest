@@ -1,20 +1,89 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { usePoolCreate } from '@/context/PoolCreateContext'
+import { useAegis } from '@cavos/aegis'
+import { cairo } from 'starknet'
 
 export default function RotationSetup() {
   const { state, setState, reset } = usePoolCreate()
-  const [monthly, setMonthly] = useState(String(state.monthlyContribution))
+  const [contributionAmount, setContributionAmount] = useState(String(state.contributionAmount))
   const [startDate, setStartDate] = useState(state.startDateISO.slice(0, 10))
 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { aegisAccount } = useAegis();
+
+  const createPool = async () => {
+    const amount = parseInt(contributionAmount || '0', 10)
+    setState((s) => ({ ...s, contributionAmount: isNaN(amount) ? 0 : amount, startDateISO: new Date(startDate).toISOString() }))
+
+    // Validation
+    if (!aegisAccount.isConnected) {
+      alert('Please connect your wallet first')
+      return;
+    }
+
+    if (!state.poolName.trim()) {
+      alert('Please enter a pool name')
+      return;
+    }
+
+    if (!state.collectionSymbol.trim()) {
+      alert('Please enter a collection symbol')
+      return;
+    }
+
+    if (amount <= 0) {
+      alert('Please enter a valid contribution amount')
+      return;
+    }
+
+    if (state.maxParticipants <= 0) {
+      alert('Please set a valid number of participants')
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+       const result = await aegisAccount.execute(
+        "0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b",
+        "create_pool",
+        [
+          cairo.felt(state.poolName),
+          cairo.felt(state.collectionSymbol),
+          cairo.uint256(state.contributionAmount),
+          state.maxParticipants,
+          state.depositTokenAddress,
+          state.yieldContractAddress,
+          Math.floor(new Date(state.startDateISO).getTime() / 1000)
+        ],
+      );
+      
+      console.log('Transaction successful:', result);
+      alert('Pool created successfully!')
+      
+      // Navigate to success page or reset form
+      router.replace({ pathname: '/pool/overview', params: { name: state.poolName, token: state.token, members: String(state.members.length || 1) } })
+      reset()
+      
+    } catch (error) {
+        console.error("Error creating pool:", error);
+        alert('Failed to create pool. Please try again.')
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
+
   const create = () => {
-    const m = parseInt(monthly || '0', 10)
-    setState((s) => ({ ...s, monthlyContribution: isNaN(m) ? 0 : m, startDateISO: new Date(startDate).toISOString() }))
+    const amount = parseInt(contributionAmount || '0', 10)
+    setState((s) => ({ ...s, contributionAmount: isNaN(amount) ? 0 : amount, startDateISO: new Date(startDate).toISOString() }))
     // Here you would call the contract/wallet flow, then show overview
-    router.replace({ pathname: '/pool/overview', params: { name: state.poolName, token: state.token, members: String(state.members.length || 1) } })
-    reset()
+    alert(state)
+    // router.replace({ pathname: '/pool/overview', params: { name: state.poolName, token: state.token, members: String(state.members.length || 1) } })
+    // reset()
   }
 
   return (
@@ -32,9 +101,9 @@ export default function RotationSetup() {
           <Text className="text-white text-[18px] font-extrabold mb-4">POOL SETTINGS</Text>
           <View className="gap-y-4">
             <View>
-              <Text className="text-text mb-2">Monthly Contribution (USD)</Text>
+              <Text className="text-text mb-2">Contribution Amount (USD)</Text>
               <View className="rounded-xl border border-secondary px-3">
-                <TextInput value={monthly} onChangeText={setMonthly} keyboardType="number-pad" placeholder="500" placeholderTextColor="#AAAAAA" className="text-white h-[48px]" />
+                <TextInput value={contributionAmount} onChangeText={setContributionAmount} keyboardType="number-pad" placeholder="500" placeholderTextColor="#AAAAAA" className="text-white h-[48px]" />
               </View>
             </View>
             <View>
@@ -46,8 +115,23 @@ export default function RotationSetup() {
           </View>
         </View>
 
-        <TouchableOpacity onPress={create} className="bg-secondary rounded-2xl mt-8 h-[56px] items-center justify-center">
-          <Text className="text-black text-[18px] font-extrabold">✓ CREATE POOL</Text>
+        <TouchableOpacity 
+          onPress={createPool} 
+          disabled={isLoading}
+          className={`rounded-2xl mt-8 h-[56px] items-center justify-center flex-row ${
+            isLoading 
+              ? 'bg-gray-500' 
+              : 'bg-secondary'
+          }`}
+        >
+          {isLoading ? (
+            <>
+              <ActivityIndicator size="small" color="#000000" style={{ marginRight: 8 }} />
+              <Text className="text-black text-[18px] font-extrabold">CREATING POOL...</Text>
+            </>
+          ) : (
+            <Text className="text-black text-[18px] font-extrabold">✓ CREATE POOL</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
