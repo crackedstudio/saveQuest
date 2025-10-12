@@ -1,7 +1,9 @@
-import React from 'react'
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
+import React, {useEffect, useState} from 'react'
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useLocalSearchParams, router } from 'expo-router'
+import { useLocalSearchParams, router, useRouter } from 'expo-router'
+import { useAegis } from "@cavos/aegis";
+import { cairo } from 'starknet';
 
 // Mock dataset for details
 const mockPools: Record<string, {
@@ -68,6 +70,101 @@ export default function PoolDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const data = mockPools[id ?? ''] ?? mockPools['stablecoin-squad'];
 
+  const [pool, setPool] = useState({})
+  const router = useRouter();
+
+  // Aegis SDK hooks - provides access to wallet and transaction functions
+  const { aegisAccount, currentAddress } = useAegis();
+
+
+    // State for transaction execution
+    const [isExecuting, setIsExecuting] = useState(false);
+    const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(
+      null
+    );
+  
+
+  const getPool = async () => {
+    if (!aegisAccount?.isWalletConnected()) return;
+    const result = await aegisAccount.call(
+      '0x00aff32441e682601f203dcdfec4f823f8f11f44b4660a0c42acc4780fd59bbf',
+      'get_pool',
+      [1],
+    );
+    // console.log('Pool:', result);
+    setPool(result)
+    alert(pool)
+  }
+
+  useEffect(() => {
+    getPool();
+  }, [setPool]);
+
+
+  // Join pool call
+
+  const handleExecuteApproveAndJoinPool = async () => {
+    if (!aegisAccount) {
+      Alert.alert("Error", "Aegis SDK not initialized");
+      return;
+    }
+
+    setIsExecuting(true);
+    try {
+      // STRK token address on Sepolia testnet
+      const strkTokenAddress =
+        "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";  
+
+      const usdc = '0x0054bd06a78db79f274984edf6907148c57af42f06ffd9a764ffe40ed9e0129b';
+
+        const approveAmount = 10000000000000000000000;
+      const savequest_contract = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
+
+      console.log("Executing approve transaction:", {
+        contract: usdc,
+        spender: savequest_contract,
+        amount: approveAmount,
+        currentAddress: currentAddress,
+      });
+
+      // Execute approve transaction using SDK executeBatch method
+      // This allows for future expansion to multiple calls in one transaction
+      const result = await aegisAccount.executeBatch([
+        {
+          contractAddress: usdc,
+          entrypoint: 'approve',
+          calldata: [savequest_contract, cairo.uint256(approveAmount)],
+        },
+        {
+          contractAddress: savequest_contract,
+          entrypoint: 'join_pool',
+          calldata: ['2']
+        }
+      ]);
+
+      // Store transaction hash for tracking and display
+      setLastTransactionHash(result.transactionHash);
+
+      Alert.alert(
+        "Transaction Successful!",
+        `Approve transaction executed successfully.\n\nTransaction Hash: ${result.transactionHash}\n}`,
+        [{ text: "OK" }]
+      );
+
+      console.log("Approve transaction result:", result);
+    } catch (error) {
+      console.error("Failed to execute approve transaction:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      Alert.alert(
+        "Error",
+        `Failed to execute approve transaction: ${errorMessage}`
+      );
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   return (
     <SafeAreaView className="w-full h-full bg-primary">
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
@@ -79,6 +176,20 @@ export default function PoolDetails() {
           <Text className="text-white text-[22px] font-bold">Pool Details</Text>
           <View className="w-[44px]" />
         </View>
+        <TouchableOpacity
+          onPress={handleExecuteApproveAndJoinPool}
+          disabled={isExecuting}
+        >
+          {isExecuting ? (
+            <View>
+              {/* <ActivityIndicator color="#FFFFFF" size="small" /> */}
+              <Text>Executing...</Text>
+            </View>
+          ) : (
+            <Text>Execute Approve</Text>
+          )}
+        </TouchableOpacity>
+
 
         <View className={`bg-bg rounded-2xl p-[20px] border-l-[8px] ${data.color === 'secondary' ? 'border-secondary' : 'border-accent'}`}>
           <Text className="text-white text-[24px] font-bold">{data.title}</Text>

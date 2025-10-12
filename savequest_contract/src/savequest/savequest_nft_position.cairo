@@ -3,7 +3,9 @@
 
 #[starknet::contract]
 pub mod NftPosition {
-    use openzeppelin::access::ownable::OwnableComponent;
+    use starknet::storage::StoragePointerWriteAccess;
+use starknet::storage::StoragePointerReadAccess;
+use openzeppelin::access::ownable::OwnableComponent;
     use openzeppelin::introspection::src5::SRC5Component;
     use openzeppelin::token::erc721::{ERC721Component, ERC721HooksEmptyImpl};
     use openzeppelin::upgrades::UpgradeableComponent;
@@ -36,6 +38,7 @@ pub mod NftPosition {
         ownable: OwnableComponent::Storage,
         #[substorage(v0)]
         upgradeable: UpgradeableComponent::Storage,
+        next_token_id: u256
     }
 
     #[event]
@@ -54,6 +57,31 @@ pub mod NftPosition {
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
         self.ownable.initializer(owner);
+    }
+
+    #[generate_trait]
+    #[abi(per_item)]
+    impl ExternalImpl of ExternalTrait {
+        #[external(v0)]
+        fn safe_mint(
+            ref self: ContractState,
+            recipient: ContractAddress,
+        ) {
+            // self.ownable.assert_only_owner();
+            let index = self.next_token_id.read() + 1;
+            self.erc721.safe_mint(recipient, index, [''].span());
+            self.next_token_id.write(index + 1);
+        }
+
+        #[external(v0)]
+        fn safeMint(
+            ref self: ContractState,
+            recipient: ContractAddress,
+            tokenId: u256,
+            data: Span<felt252>,
+        ) {
+            self.safe_mint(recipient);
+        }
     }
 
     //

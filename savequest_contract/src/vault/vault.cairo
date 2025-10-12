@@ -28,12 +28,20 @@ pub mod SaveQuestVault {
         CreatePoolEvent: CreatePoolEvent,
         #[flat]
         UpgradeableEvent: UpgradeableComponent::Event,
+        JoinPoolEvent: JoinPoolEvent
     }
 
     #[derive(Drop, starknet::Event)]
     struct CreatePoolEvent {
         pool_id: u64,
         creator: ContractAddress,
+        participants_count: u32,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct JoinPoolEvent {
+        pool_id: u64,
+        participant: ContractAddress,
         participants_count: u32,
     }
 
@@ -67,14 +75,13 @@ pub mod SaveQuestVault {
         /// @return pool_id            Unique identifier for the newly created pool
         fn create_pool(
             ref self: ContractState,
-            _title: ByteArray,
-            _collection_symbol: ByteArray,
+            _title: felt252,
+            _collection_symbol: felt252,
             _contribution_amount: u256,
             _max_participants: u32,
             _deposit_token: ContractAddress,
             _yeild_contract: ContractAddress,
-            _start_date: u64,
-            _collection_uri: ByteArray,
+            _start_date: u64
         ) -> u64 {
             let _pool_id: u64 = self.pool_count.read();
             let _caller: ContractAddress = get_caller_address();
@@ -84,13 +91,13 @@ pub mod SaveQuestVault {
             assert(_contribution_amount > 0_u256, 'Invalid amount');
             let (_nft_position_address, _ ) = deploy_syscall(
                 NFT_POSITION_CLASSHASH.try_into().unwrap(),
-                _caller.into(),
+                _start_date.into(),
                 array![_address_this.into()].span(),
                 true,
             ).unwrap_syscall();
 
             // INftPosition721Dispatcher { contract_address: _nft_position_address }
-            //     .initialize(_title, _collection_symbol, _collection_uri);
+            //     .initialize(_title.try_into().unwrap(), _collection_symbol, _collection_uri);
 
             let new_pool_id: u64 = _pool_id + 1_u64;
 
@@ -107,7 +114,7 @@ pub mod SaveQuestVault {
                 last_harvest_timestamp: 0,
                 rounds_completed: 0_u32,
                 deposit_token: _deposit_token,
-                position_nft: _yeild_contract,
+                position_nft: _nft_position_address,
                 is_active: true,
                 yeild_contract: _yeild_contract,
             };
@@ -175,11 +182,18 @@ pub mod SaveQuestVault {
 
             _nft_instance.safe_mint(_caller);
 
-            _pool.participants_count = _pool.participants_count + 1_u32;
-            _pool.principal_amount = _pool.principal_amount + _pool.contribution_amount;
-            self.pool_participants.write((_pool_id, _pool.participants_count), _participant);
-            self.pools.write(_pool_id, _pool);
-            if _pool.participants_count == _pool.max_participants {
+            let _new_count = _pool.participants_count + 1_u32;
+            let _new_principal_amt = _pool.principal_amount + _pool.contribution_amount;
+            self.pool_participants.write((_pool_id, _new_count), _participant);
+            self.pools.write(_pool_id, Pool{ participants_count: _new_count, principal_amount: _new_principal_amt, .._pool});
+
+            self.emit(JoinPoolEvent{
+                pool_id: _pool_id,
+                participant: _caller,
+                participants_count: _new_count,
+            });
+
+            if _new_count == _pool.max_participants {
                 self._deposit_to_yeild(_pool_id);
             }
         }

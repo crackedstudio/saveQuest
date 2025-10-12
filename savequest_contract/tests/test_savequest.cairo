@@ -47,9 +47,8 @@ fn create_pool() -> (ContractAddress, u64) {
     let vault_address = deploy("SaveQuestVault");
     let vault_instance = IVaultDispatcher { contract_address: vault_address };
 
-    let title: ByteArray = "Test";
-    let symbol: ByteArray = "TST";
-    let uri: ByteArray = "ipfs://test-uri-metadata-hash";
+    let title: felt252 = 'Test';
+    let symbol: felt252 = 'TST';
     let ten_mins: u64 = 600;
     let max_participants: u32 = 5;
     let contribution_amount: u256 = 10_000_000_000_000; //
@@ -63,7 +62,6 @@ fn create_pool() -> (ContractAddress, u64) {
             Accounts::account1(),
             Accounts::account2(),
             get_block_timestamp() + ten_mins,
-            uri,
         );
 
     (vault_address, pool_id)
@@ -73,4 +71,6 @@ fn create_pool() -> (ContractAddress, u64) {
 fn test_can_create_pool() {
     let (vault_address, pool_id) = create_pool();
     let vault_instance = IVaultDispatcher { contract_address: vault_address };
+
+    assert(vault_address.is_non_zero(), 'not deployed');
 }

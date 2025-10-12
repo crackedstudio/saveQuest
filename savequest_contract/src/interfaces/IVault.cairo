@@ -5,14 +5,13 @@ use savequest_contract::constants::types::{Pool, Participant};
 pub trait IVault<TContractState> {
     fn create_pool(
         ref self: TContractState,
-        _title: ByteArray,
-        _collection_symbol: ByteArray,
+        _title: felt252,
+        _collection_symbol: felt252,
         _contribution_amount: u256,
         _max_participants: u32,
         _deposit_token: ContractAddress,
         _yeild_contract: ContractAddress,
-        _start_date: u64,
-        _collection_uri: ByteArray,
+        _start_date: u64
     ) -> u64;
 
     fn join_pool(ref self: TContractState, _pool_id: u64);
