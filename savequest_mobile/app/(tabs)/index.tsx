@@ -49,12 +49,12 @@ export default function Index() {
 
           {/* Actions */}
           <View className="gap-y-4">
-            <TouchableOpacity className="w-full bg-secondary h-[64px] justify-center items-center rounded-[16px]">
+            {/* <TouchableOpacity className="w-full bg-secondary h-[64px] justify-center items-center rounded-[16px]">
               <Link className="text-black font-extrabold text-[18px]" href="/(tabs)/pools">+ DEPOSIT</Link>
             </TouchableOpacity>
             <TouchableOpacity className="w-full bg-bg h-[64px] justify-center items-center rounded-[16px]">
               <Link className="text-white font-extrabold text-[18px]" href="/(tabs)/pools">— WITHDRAW</Link>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <TouchableOpacity className="w-full bg-bg h-[64px] justify-center items-center rounded-[16px]">
               <Link className="text-white font-extrabold text-[18px]" href="/create-pool/info">✚ CREATE POOL</Link>
             </TouchableOpacity>

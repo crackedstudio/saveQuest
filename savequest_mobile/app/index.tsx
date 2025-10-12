@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, Pressable, Alert } from "react-native";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,28 +15,24 @@ import * as SecureStore from "expo-secure-store";
 // import { useAccount } from "@/context/UserContext";
 
 const onboarding = () => {
-  // const [wallet, setWallet] = useState<CavosWallet | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { aegisAccount, signUp } = useAegis();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-    // Wallet deployment state
-    const [isDeploying, setIsDeploying] = useState(false);
-
-
-    // Google OAuth authentication state
-    const [isGoogleLoggingIn, setIsGoogleLoggingIn] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [isGoogleLoggingIn, setIsGoogleLoggingIn] = useState(false);
+  const [isAppleLoggingIn, setIsAppleLoggingIn] = useState(false);
 
     const loadExistingWallet = useCallback(async () => {
       try {
         // Retrieve the saved private key from secure storage
-        const savedPrivateKey = await SecureStore.getItemAsync(
-          "wallet_private_key"
-        );
+        const savedPrivateKey = await SecureStore.getItemAsync("wallet_private_key");
+        const savedAccessToken = await SecureStore.getItemAsync("access_token");
+        const savedAccountAddress = await SecureStore.getItemAsync("account_address");
   
-        // If we have a private key and the SDK is initialized, connect the account
-        if (savedPrivateKey && aegisAccount) {
+        // If we have tokens and account info, restore the session
+        if (savedPrivateKey && savedAccessToken && savedAccountAddress && aegisAccount) {
           await aegisAccount.connectAccount(savedPrivateKey);
-          setWalletAddress(aegisAccount.address);
+          setWalletAddress(savedAccountAddress);
         }
       } catch (error) {
         console.log("No existing wallet found or error loading:", error);
@@ -48,39 +44,6 @@ const onboarding = () => {
       loadExistingWallet();
     }, [loadExistingWallet]);
 
-
-    const handleDeployWallet = async () => {
-      if (!aegisAccount) {
-        alert("Error: Aegis SDK not initialized");
-        return;
-      }
-  
-      setIsDeploying(true);
-      try {
-        // Deploy new wallet using Aegis SDK (gasless deployment)
-        const privateKey = await aegisAccount.deployAccount();
-  
-        // Save private key securely to device storage
-        await SecureStore.setItemAsync("wallet_private_key", privateKey);
-  
-        // Update UI state with the new wallet address
-        setWalletAddress(aegisAccount.address);
-  
-        // Show success message with wallet details
-        Alert.alert(
-          "Wallet Created!",
-          `Your wallet has been deployed successfully.\n\nAddress: ${aegisAccount.address}\n\nPrivate Key: ${privateKey}\n\n⚠️ IMPORTANT: Save your private key securely!`,
-          [{ text: "OK" }]
-        );
-      } catch (error) {
-        console.error("Wallet deployment failed:", error);
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        Alert.alert("Error", `Failed to deploy wallet: ${errorMessage}`);
-      } finally {
-        setIsDeploying(false);
-      }
-    };
 
   // const {setAccount} = useAccount();
 
@@ -102,12 +65,55 @@ const onboarding = () => {
     }
   }, [aegisAccount?.address])
 
+  // Logout function to clear session
+  const logout = async () => {
+    try {
+      await SecureStore.deleteItemAsync("wallet_private_key");
+      await SecureStore.deleteItemAsync("access_token");
+      await SecureStore.deleteItemAsync("account_address");
+      setWalletAddress(null);
+      console.log('Logged out successfully');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
     if (aegisAccount?.isWalletConnected()) {
       return (
-        <View>
-          <Text>{aegisAccount?.address}</Text>
-        </View>
+        <SafeAreaView className="bg-primary w-full h-full items-center justify-center">
+          <View className="flex flex-col gap-y-6 items-center px-[25px]">
+            <View className="flex flex-col border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2 bg-primary p-[33px]">
+              <Image source={ICONS.logo} />
+            </View>
+            
+            <View className="flex flex-col items-center gap-y-4">
+              <Text className="text-white text-[24px] font-bold text-center">
+                Welcome Back!
+              </Text>
+              <Text className="text-text text-[14px] text-center">
+                Wallet Address: {aegisAccount?.address?.slice(0, 6)}...{aegisAccount?.address?.slice(-4)}
+              </Text>
+            </View>
+
+            <TouchableOpacity 
+              className="w-full bg-secondary h-[60px] rounded-[16px] justify-center items-center"
+              onPress={() => router.replace("/(tabs)")}
+            >
+              <Text className="text-primary font-bold text-[18px]">
+                CONTINUE TO APP
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className="w-full bg-gray-600 h-[50px] rounded-[16px] justify-center items-center"
+              onPress={logout}
+            >
+              <Text className="text-white font-semibold text-[16px]">
+                LOGOUT
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
       )
     }
 
@@ -121,18 +127,63 @@ const onboarding = () => {
       
     }
 
-      // Login with Apple
+  // Login with Apple
   const loginWithApple = async () => {
-    const url = await aegisAccount.getAppleOAuthUrl('exp://192.168.1.16:8081');
-    const result = await openAuthSessionAsync(url, 'exp://192.168.1.16:8081');
-    await aegisAccount.handleOAuthCallback(result);
+    if (isAppleLoggingIn) return;
+    
+    setIsAppleLoggingIn(true);
+    try {
+      const url = await aegisAccount.getAppleOAuthUrl('exp://192.168.1.16:8081');
+      const result = await openAuthSessionAsync(url, 'exp://192.168.1.16:8081');
+      await aegisAccount.handleOAuthCallback(result);
+      
+      // Save session data after successful OAuth
+      const address = aegisAccount.address;
+      
+      if (address) {
+        await SecureStore.setItemAsync("wallet_private_key", "oauth_private_key"); // Placeholder
+        await SecureStore.setItemAsync("access_token", "oauth_token"); // Placeholder
+        await SecureStore.setItemAsync("account_address", address);
+        
+        setWalletAddress(address);
+        console.log('Apple login successful:', address);
+      }
+    } catch (error) {
+      console.error('Apple login failed:', error);
+      Alert.alert('Login Failed', 'Failed to sign in with Apple. Please try again.');
+    } finally {
+      setIsAppleLoggingIn(false);
+    }
   };
 
   const loginWithGoogle = async () => {
-    const url = await aegisAccount.getGoogleOAuthUrl('exp://192.168.1.16:8081');
-    const result = await openAuthSessionAsync(url, 'exp://192.168.1.16:8081');
-    await aegisAccount.handleOAuthCallback(result);
+    if (isGoogleLoggingIn) return;
+    
+    setIsGoogleLoggingIn(true);
+    try {
+      const url = await aegisAccount.getGoogleOAuthUrl('exp://192.168.1.16:8081');
+      const result = await openAuthSessionAsync(url, 'exp://192.168.1.16:8081');
+      await aegisAccount.handleOAuthCallback(result);
+      
+      // Save session data after successful OAuth
+      const address = aegisAccount.address;
+      
+      if (address) {
+        await SecureStore.setItemAsync("wallet_private_key", "oauth_private_key"); // Placeholder
+        await SecureStore.setItemAsync("access_token", "oauth_token"); // Placeholder
+        await SecureStore.setItemAsync("account_address", address);
+        
+        setWalletAddress(address);
+        console.log('Google login successful:', address);
+      }
+    } catch (error) {
+      console.error('Google login failed:', error);
+      Alert.alert('Login Failed', 'Failed to sign in with Google. Please try again.');
+    } finally {
+      setIsGoogleLoggingIn(false);
+    }
   };
+
 
 
   return (
@@ -169,7 +220,58 @@ const onboarding = () => {
           </View>
         </View>
 
-        <View className="flex flex-row gap-x-4 w-full  h-[117.516px] mt-[50px]">
+       
+
+        <View className="flex flex-col gap-y-6">
+          {/* <TouchableOpacity className="w-full bg-secondary h-[60px] rounded-[16px] justify-center items-center">
+            <Link className="text-primary font-bold text-[18px]" href="/(tabs)">
+              GET STARTED
+            </Link>
+          </TouchableOpacity> */}
+
+          <View className="flex flex-col gap-y-3">
+            <Text className="text-white text-center text-[16px] font-semibold">
+              continue with
+            </Text>
+            
+            <TouchableOpacity 
+              className="w-full bg-black border border-gray-600 h-[56px] rounded-[16px] justify-center items-center flex-row"
+              onPress={loginWithApple}
+              disabled={isAppleLoggingIn}
+            >
+              {isAppleLoggingIn ? (
+                <>
+                  <View className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <Text className="text-white font-semibold text-[16px]">Signing in...</Text>
+                </>
+              ) : (
+                <>
+                  <Text className="text-white text-[20px] mr-2">🍎</Text>
+                  <Text className="text-white font-semibold text-[16px]">Continue with Apple</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className="w-full bg-white border border-gray-200 h-[56px] rounded-[16px] justify-center items-center flex-row"
+              onPress={loginWithGoogle}
+              disabled={isGoogleLoggingIn}
+            >
+              {isGoogleLoggingIn ? (
+                <>
+                  <View className="w-5 h-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mr-2" />
+                  <Text className="text-gray-600 font-semibold text-[16px]">Signing in...</Text>
+                </>
+              ) : (
+                <>
+                  <Text className="text-[20px] mr-2">🔍</Text>
+                  <Text className="text-gray-800 font-semibold text-[16px]">Continue with Google</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <View className="flex flex-row gap-x-4 w-full  h-[117.516px] mt-[50px]">
           <View className="flex flex-col w-1/2 p-[16px] border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2">
             <View className="w-[33.097px] h-[33.097px] bg-secondary rounded-lg"></View>
             <Text className="text-white font-bold text-[14px]">
@@ -184,44 +286,6 @@ const onboarding = () => {
             <Text className="text-highlight text-[12px]">7.8% APY</Text>
           </View>
         </View>
-
-        <View className="flex flex-col gap-y-[49px]">
-          <TouchableOpacity className="w-full bg-secondary h-[60px] rounded-[16px] justify-center items-center">
-            <Link className="text-primary font-bold text-[18px]" href="/(tabs)">
-              GET STARTED
-            </Link>
-          </TouchableOpacity>
-
-        
-          
-          <View className="flex flex-col gap-y-4">
-          <Pressable className="bg-gray-400 p-4" onPress={() =>  loginWithApple()}>
-            <Text className="text-white">Apple login</Text>
-          </Pressable>
-
-          <Pressable className="bg-gray-400 p-4" onPress={() =>  loginWithGoogle()}>
-            <Text className="text-white">google Acct</Text>
-          </Pressable>
-              {/* <SignInWithApple
-            appId={process.env.EXPO_PUBLIC_CAVOS_APP_ID!}
-            network="sepolia"
-            finalRedirectUri="yourapp://callback"
-            onSuccess={handleLoginSuccess}
-            onError={handleLoginError}
-          >
-            <Text className="text-slate-700">Sign in with Apple</Text>
-          </SignInWithApple>
-
-          <SignInWithGoogle
-            appId={process.env.EXPO_PUBLIC_CAVOS_APP_ID!}
-            network="sepolia"
-            finalRedirectUri="yourapp://callback"
-            onSuccess={handleLoginSuccess}
-            onError={handleLoginError}
-          >
-            <Text className="text-slate-700">Sign in with Google</Text>
-          </SignInWithGoogle> */}
-          </View>
           
           <View>
             <Text className="text-text font-semibold text-center text-[12px]">
