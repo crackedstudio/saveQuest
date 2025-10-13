@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { ICONS } from '@/constants/icons'
 import { router } from 'expo-router'
 import { useAegis } from "@cavos/aegis";
+import { Contract, RpcProvider } from 'starknet'
+import savequestAbi from '@/app/Abis/savequestAbi.json'
 
 // PoolCard component for displaying individual pools
 const PoolCard = ({ pool }: { pool: any }) => {
@@ -47,35 +49,35 @@ const PoolCard = ({ pool }: { pool: any }) => {
         <View className='flex flex-row items-center gap-x-4'>
           <View className='w-[48px] h-[48px] rounded-xl bg-secondary' />
           <View className='flex flex-col gap-y-1'>
-            <Text className='text-white text-[18px] font-bold'>{getPoolName(pool.id)}</Text>
-            <Text className='text-text text-[12px]'>{getTokenType(pool.deposit_token)}</Text>
+            {/* <Text className='text-white text-[18px] font-bold'>{getPoolName(pool.id)}</Text> */}
+            <Text className='text-text text-[12px]'>{getTokenType(pool.deposit_token.toString())}</Text>
           </View>
         </View>
         <View className='items-end'>
           <Text className='text-secondary text-[22px] font-extrabold'>${formatAmount(pool.principal_amount)}</Text>
-          <Text className='text-text text-[12px]'>{pool.participants_count} members</Text>
+          <Text className='text-text text-[12px]'>{Number(pool.participants_count)} members</Text>
         </View>
       </View>
 
       <View className='mt-6'>
-        <View className='flex flex-row justify-between items-center mb-2'>
+        {/* <View className='flex flex-row justify-between items-center mb-2'>
           <Text className='text-white text-[16px] font-bold'>Next Yield Recipient:</Text>
-          <Text className='text-secondary text-[16px] font-bold'>{getNextRecipient(pool.id)}</Text>
-        </View>
-        <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
+          <Text className='text-secondary text-[16px] font-bold'></Text>
+        </View> */}
+        {/* <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
           <View 
             className='h-full bg-black' 
             style={{ width: `${getProgressPercentage(pool.participants_count, pool.max_participants)}%` }}
           />
-        </View>
-        <Text className='text-text text-[12px] mt-2'>{getDaysRemaining(pool.start_timestamp)} days remaining</Text>
+        </View> */}
+        {/* <Text className='text-text text-[12px] mt-2'>{getDaysRemaining(pool.start_timestamp)} days remaining</Text> */}
       </View>
 
       <View className='mt-6 flex flex-row justify-between items-center'>
-        <View>
+        {/* <View>
           <Text className='text-accent text-[18px] font-extrabold'>+${getYieldAccrued(pool.principal_amount)}</Text>
           <Text className='text-text text-[12px]'>Yield accrued</Text>
-        </View>
+        </View> */}
         <TouchableOpacity 
           className='bg-secondary px-[18px] py-[12px] rounded-xl' 
           onPress={() => router.push({ pathname: '/pool/[id]', params: { id: pool.id.toString() } })}
@@ -92,57 +94,23 @@ const pools = () => {
   const [pools, setPools] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-    // Function to parse flattened pool data into pool objects
-  const parsePoolsArray = (flattenedArray: any[]) => {
-    const pools = [];
-    const fieldsPerPool = 15; // Number of fields in the Pool struct
+  const provider = new RpcProvider({ nodeUrl: 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8' });
+
     
-    for (let i = 0; i < flattenedArray.length; i += fieldsPerPool) {
-      const poolData = flattenedArray.slice(i, i + fieldsPerPool);
-      
-      const pool = {
-        id: Number(poolData[0]),
-        creator: poolData[1],
-        participants_count: Number(poolData[2]),
-        max_participants: Number(poolData[3]),
-        contribution_amount: poolData[4],
-        principal_amount: poolData[5],
-        total_yield_distributed: poolData[6],
-        start_timestamp: Number(poolData[7]),
-        duration: Number(poolData[8]),
-        last_harvest_timestamp: Number(poolData[9]),
-        rounds_completed: Number(poolData[10]),
-        deposit_token: poolData[11],
-        position_nft: poolData[12],
-        is_active: Boolean(poolData[13]),
-        yeild_contract: poolData[14],
-      };
-      
-      pools.push(pool);
-    }
-    
-    return pools;
-  };
 
   const getPools = async () => {
     if (!aegisAccount?.isWalletConnected()) return;
+    let addr = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
     
     setIsLoading(true);
     try {
-      const result = await aegisAccount.call(
-        '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b',
-        'get_all_pools',
-        [],
-      );
-      
-      console.log('Pools: raw:', result);
-      
-      // Parse the flattened array into pool objects
-      const parsedPools = parsePoolsArray(result);
-      console.log('Pools: parsed:', parsedPools);
-      
-      setPools(parsedPools);
-      console.log(parsedPools)
+
+      const savequestInstance = new Contract(savequestAbi, addr, provider);
+
+      let response = await savequestInstance.get_all_pools();
+
+      setPools(response);
+      // console.log(parsedPools)
     } catch (error) {
       console.error('Error fetching pools:', error);
       alert('Failed to fetch pools. Please try again.');
