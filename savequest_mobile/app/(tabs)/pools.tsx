@@ -5,22 +5,150 @@ import { ICONS } from '@/constants/icons'
 import { router } from 'expo-router'
 import { useAegis } from "@cavos/aegis";
 
-const pools = () => {
+// PoolCard component for displaying individual pools
+const PoolCard = ({ pool }: { pool: any }) => {
+  const formatAmount = (amount: string) => {
+    return (Number(amount) / 1e18).toFixed(2); // Convert from wei to ETH
+  };
 
+  const getPoolName = (poolId: number) => {
+    const names = ['Stablecoin Squad', 'BTC Vault', 'Yield Masters', 'Crypto Circle', 'DeFi Alliance'];
+    return names[poolId % names.length] || `Pool ${poolId}`;
+  };
+
+  const getTokenType = (depositToken: string) => {
+    // This would need to be mapped based on actual token addresses
+    return 'USDC Pool';
+  };
+
+  const getNextRecipient = (poolId: number) => {
+    const names = ['Sarah M.', 'John D.', 'Alice K.', 'Bob L.', 'Emma R.'];
+    return names[poolId % names.length] || 'Member';
+  };
+
+  const getProgressPercentage = (participants: number, maxParticipants: number) => {
+    return Math.min((participants / maxParticipants) * 100, 100);
+  };
+
+  const getDaysRemaining = (startTimestamp: number) => {
+    const now = Math.floor(Date.now() / 1000);
+    const daysSinceStart = Math.floor((now - startTimestamp) / (24 * 60 * 60));
+    return Math.max(30 - daysSinceStart, 0); // Assuming 30-day cycles
+  };
+
+  const getYieldAccrued = (principalAmount: string) => {
+    const amount = Number(principalAmount) / 1e18;
+    return (amount * 0.075).toFixed(2); // 7.5% APY approximation
+  };
+
+  return (
+    <View className='bg-bg rounded-2xl p-[16px] w-full border-l-[8px] border-secondary mb-4'>
+      <View className='flex flex-row justify-between items-start'>
+        <View className='flex flex-row items-center gap-x-4'>
+          <View className='w-[48px] h-[48px] rounded-xl bg-secondary' />
+          <View className='flex flex-col gap-y-1'>
+            <Text className='text-white text-[18px] font-bold'>{getPoolName(pool.id)}</Text>
+            <Text className='text-text text-[12px]'>{getTokenType(pool.deposit_token)}</Text>
+          </View>
+        </View>
+        <View className='items-end'>
+          <Text className='text-secondary text-[22px] font-extrabold'>${formatAmount(pool.principal_amount)}</Text>
+          <Text className='text-text text-[12px]'>{pool.participants_count} members</Text>
+        </View>
+      </View>
+
+      <View className='mt-6'>
+        <View className='flex flex-row justify-between items-center mb-2'>
+          <Text className='text-white text-[16px] font-bold'>Next Yield Recipient:</Text>
+          <Text className='text-secondary text-[16px] font-bold'>{getNextRecipient(pool.id)}</Text>
+        </View>
+        <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
+          <View 
+            className='h-full bg-black' 
+            style={{ width: `${getProgressPercentage(pool.participants_count, pool.max_participants)}%` }}
+          />
+        </View>
+        <Text className='text-text text-[12px] mt-2'>{getDaysRemaining(pool.start_timestamp)} days remaining</Text>
+      </View>
+
+      <View className='mt-6 flex flex-row justify-between items-center'>
+        <View>
+          <Text className='text-accent text-[18px] font-extrabold'>+${getYieldAccrued(pool.principal_amount)}</Text>
+          <Text className='text-text text-[12px]'>Yield accrued</Text>
+        </View>
+        <TouchableOpacity 
+          className='bg-secondary px-[18px] py-[12px] rounded-xl' 
+          onPress={() => router.push({ pathname: '/pool/[id]', params: { id: pool.id.toString() } })}
+        >
+          <Text className='text-black text-[16px] font-extrabold'>VIEW DETAILS</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const pools = () => {
   const { aegisAccount } = useAegis();
-  const [pools, setPools] = useState();
+  const [pools, setPools] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+    // Function to parse flattened pool data into pool objects
+  const parsePoolsArray = (flattenedArray: any[]) => {
+    const pools = [];
+    const fieldsPerPool = 15; // Number of fields in the Pool struct
+    
+    for (let i = 0; i < flattenedArray.length; i += fieldsPerPool) {
+      const poolData = flattenedArray.slice(i, i + fieldsPerPool);
+      
+      const pool = {
+        id: Number(poolData[0]),
+        creator: poolData[1],
+        participants_count: Number(poolData[2]),
+        max_participants: Number(poolData[3]),
+        contribution_amount: poolData[4],
+        principal_amount: poolData[5],
+        total_yield_distributed: poolData[6],
+        start_timestamp: Number(poolData[7]),
+        duration: Number(poolData[8]),
+        last_harvest_timestamp: Number(poolData[9]),
+        rounds_completed: Number(poolData[10]),
+        deposit_token: poolData[11],
+        position_nft: poolData[12],
+        is_active: Boolean(poolData[13]),
+        yeild_contract: poolData[14],
+      };
+      
+      pools.push(pool);
+    }
+    
+    return pools;
+  };
 
   const getPools = async () => {
     if (!aegisAccount?.isWalletConnected()) return;
-    const result = await aegisAccount.call(
-      '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b',
-      'get_all_pools',
-      [],
-    );
-    console.log('Pools: raw:', result);
-    setPools(result)
-    alert(result)
-    console.log(result)
+    
+    setIsLoading(true);
+    try {
+      const result = await aegisAccount.call(
+        '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b',
+        'get_all_pools',
+        [],
+      );
+      
+      console.log('Pools: raw:', result);
+      
+      // Parse the flattened array into pool objects
+      const parsedPools = parsePoolsArray(result);
+      console.log('Pools: parsed:', parsedPools);
+      
+      setPools(parsedPools);
+      console.log(parsedPools)
+    } catch (error) {
+      console.error('Error fetching pools:', error);
+      alert('Failed to fetch pools. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -35,11 +163,20 @@ const pools = () => {
     {/* <ScrollView className='w-full' contentContainerStyle={{ padding: 24, rowGap: 24 }}> */}
     <View className='flex flex-col gap-y-6 w-full'>
       {/* Header */}
-      <View className="flex flex-row justify-between">
+      <View className="flex flex-row justify-between items-center">
         <View className="flex flex-row justify-center bg-primary items-center gap-x-2">
           <Image className="h-[36px] w-[36px]" source={ICONS.logo} />
           <Text className="text-white text-[24px] font-bold">PoolSave</Text>
         </View>
+        <TouchableOpacity 
+          className="bg-secondary rounded-xl px-4 py-2"
+          onPress={getPools}
+          disabled={isLoading}
+        >
+          <Text className="text-primary font-bold">
+            {isLoading ? 'Loading...' : 'Refresh'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Toggle Tabs */}
@@ -53,48 +190,29 @@ const pools = () => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={pools}
-        renderItem={(pool) => (
-          <View className='bg-bg rounded-2xl p-[16px] w-full border-l-[8px] border-secondary'>
-        <View className='flex flex-row justify-between items-start'>
-          <View className='flex flex-row items-center gap-x-4'>
-            <View className='w-[48px] h-[48px] rounded-xl bg-secondary' />
-            <View className='flex flex-col gap-y-1'>
-              <Text className='text-white text-[18px] font-bold'>Stablecoin{"\n"}Squad</Text>
-              {/* <Text className='text-text text-[12px]'>{pool?.id}</Text> */}
-            </View>
-          </View>
-          <View className='items-end'>
-            <Text className='text-secondary text-[22px] font-extrabold'>$2,500</Text>
-            <Text className='text-text text-[12px]'>8 members</Text>
-          </View>
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-white text-lg">Loading pools...</Text>
         </View>
-
-        <View className='mt-6'>
-          <View className='flex flex-row justify-between items-center mb-2'>
-            <Text className='text-white text-[16px] font-bold'>Next Yield Recipient:</Text>
-            <Text className='text-secondary text-[16px] font-bold'>Sarah M.</Text>
-          </View>
-          <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
-            <View className='h-full w-[65%] bg-black' />
-          </View>
-          <Text className='text-text text-[12px] mt-2'>18 days remaining</Text>
-        </View>
-
-        <View className='mt-6 flex flex-row justify-between items-center'>
-          <View>
-            <Text className='text-accent text-[18px] font-extrabold'>+$187.50</Text>
-            <Text className='text-text text-[12px]'>Yield accrued</Text>
-          </View>
-          <TouchableOpacity className='bg-secondary px-[18px] py-[12px] rounded-xl' onPress={() => router.push({ pathname: '/pool/[id]', params: { id: 'stablecoin-squad' } })}>
-            <Text className='text-black text-[16px] font-extrabold'>VIEW DETAILS</Text>
+      ) : pools.length === 0 ? (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-white text-lg">No pools found</Text>
+          <TouchableOpacity 
+            className="bg-secondary rounded-xl px-6 py-3 mt-4"
+            onPress={() => router.push('/create-pool/info')}
+          >
+            <Text className="text-primary font-bold">Create Pool</Text>
           </TouchableOpacity>
         </View>
-      </View>)
-        }
-        keyExtractor = {pool => pool.id}
-      />
+      ) : (
+        <FlatList
+          data={pools}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => <PoolCard pool={item} />}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
 
       {/* <View className='bg-bg rounded-2xl p-[16px] w-full border-l-[8px] border-secondary'>
