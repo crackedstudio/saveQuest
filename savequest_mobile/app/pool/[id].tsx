@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, router, useRouter } from 'expo-router'
 import { useAegis } from "@cavos/aegis";
-import { cairo } from 'starknet';
+import { cairo, Contract, RpcProvider } from 'starknet';
+import savequestAbi from '@/app/Abis/savequestAbi.json'
 
 // Mock dataset for details
 const mockPools: Record<string, {
@@ -70,15 +71,17 @@ export default function PoolDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const data = mockPools[id ?? ''] ?? mockPools['stablecoin-squad'];
 
-  const [pool, setPool] = useState({})
+  const [pool, setPool] = useState<any>()
   const router = useRouter();
 
   // Aegis SDK hooks - provides access to wallet and transaction functions
   const { aegisAccount, currentAddress } = useAegis();
+  const provider = new RpcProvider({ nodeUrl: 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8' });
 
 
     // State for transaction execution
     const [isExecuting, setIsExecuting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(
       null
     );
@@ -86,14 +89,24 @@ export default function PoolDetails() {
 
   const getPool = async () => {
     if (!aegisAccount?.isWalletConnected()) return;
-    const result = await aegisAccount.call(
-      '0x00aff32441e682601f203dcdfec4f823f8f11f44b4660a0c42acc4780fd59bbf',
-      'get_pool',
-      [1],
-    );
-    // console.log('Pool:', result);
-    setPool(result)
-    alert(pool)
+    let addr = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
+    
+    setIsLoading(true);
+    try {
+
+      const savequestInstance = new Contract(savequestAbi, addr, provider);
+
+      let response = await savequestInstance.get_pool(id);
+
+      setPool(response);
+      // alert(pool)
+      console.log(pool)
+    } catch (error) {
+      console.error('Error fetching pools:', error);
+      alert('Failed to fetch pools. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -117,7 +130,7 @@ export default function PoolDetails() {
 
       const usdc = '0x0054bd06a78db79f274984edf6907148c57af42f06ffd9a764ffe40ed9e0129b';
 
-        const approveAmount = 10000000000000000000000;
+        const approveAmount = Number(pool?.contribution_amount);
       const savequest_contract = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
 
       console.log("Executing approve transaction:", {
@@ -138,7 +151,7 @@ export default function PoolDetails() {
         {
           contractAddress: savequest_contract,
           entrypoint: 'join_pool',
-          calldata: ['2']
+          calldata: [id]
         }
       ]);
 
@@ -176,20 +189,6 @@ export default function PoolDetails() {
           <Text className="text-white text-[22px] font-bold">Pool Details</Text>
           <View className="w-[44px]" />
         </View>
-        <TouchableOpacity
-          onPress={handleExecuteApproveAndJoinPool}
-          disabled={isExecuting}
-        >
-          {isExecuting ? (
-            <View>
-              {/* <ActivityIndicator color="#FFFFFF" size="small" /> */}
-              <Text>Executing...</Text>
-            </View>
-          ) : (
-            <Text>Execute Approve</Text>
-          )}
-        </TouchableOpacity>
-
 
         <View className={`bg-bg rounded-2xl p-[20px] border-l-[8px] ${data.color === 'secondary' ? 'border-secondary' : 'border-accent'}`}>
           <Text className="text-white text-[24px] font-bold">{data.title}</Text>
@@ -197,9 +196,9 @@ export default function PoolDetails() {
           <View className="flex flex-row justify-between items-end mt-4">
             <View>
               <Text className="text-text text-[14px]">Total Value</Text>
-              <Text className={`text-[28px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}>{data.total}</Text>
+              <Text className={`text-[28px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}>{Number(pool?.contribution_amount) * Number(pool?.participants_count)}</Text>
             </View>
-            <Text className="text-text text-[16px]">{data.members} members</Text>
+            <Text className="text-text text-[16px]">{pool?.participants_count} members</Text>
           </View>
 
           <View className="mt-6">
@@ -215,8 +214,19 @@ export default function PoolDetails() {
           </View>
         </View>
 
-        <TouchableOpacity className="bg-secondary rounded-xl py-[14px] items-center">
-          <Text className="text-black text-[18px] font-extrabold">Join / Manage</Text>
+        <TouchableOpacity 
+          onPress={handleExecuteApproveAndJoinPool}
+          disabled={isExecuting}
+          className="bg-secondary rounded-xl py-[14px] items-center"
+        >
+          {isExecuting ? (
+            <View>
+              {/* <ActivityIndicator color="#FFFFFF" size="small" /> */}
+              <Text className="text-black text-[18px] font-extrabold">Joining...</Text>
+            </View>
+          ) : (
+            <Text className="text-black text-[18px] font-extrabold">Join Pool</Text>
+          )}
         </TouchableOpacity>
 
         {/* Stats */}
