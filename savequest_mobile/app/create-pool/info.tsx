@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { usePoolCreate, TokenType, GroupType, YieldContractType } from '@/context/PoolCreateContext'
 import { getTokenAddress, getYieldContractAddress } from '@/utils/tokenAddresses'
+import useFetch from '@/hooks/useFetch'
 
 export default function CreatePoolInfo() {
   const { state, setState } = usePoolCreate()
@@ -12,6 +13,25 @@ export default function CreatePoolInfo() {
   const [token, setToken] = useState<TokenType>(state.token)
   const [groupType, setGroupType] = useState<GroupType>(state.groupType)
   const [yieldContractType, setYieldContractType] = useState<YieldContractType>(state.yieldContractType)
+
+
+  const {data: yeildPools, error, loading} = useFetch('https://dev.api.vesu.xyz/markets');
+ 
+  // Normalize markets from API (handles different response shapes)
+  const markets: any[] = React.useMemo(() => {
+    try {
+      if (!yeildPools) return [];
+      if (Array.isArray(yeildPools)) return yeildPools;
+      if (Array.isArray(yeildPools?.markets)) return yeildPools.markets;
+      if (Array.isArray(yeildPools?.data?.markets)) return yeildPools.data.markets;
+      if (Array.isArray(yeildPools?.data)) return yeildPools.data;
+      if (Array.isArray(yeildPools?.items)) return yeildPools.items;
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }, [yeildPools]);
+
 
   const handleTokenChange = (selectedToken: TokenType) => {
     setToken(selectedToken)
@@ -108,11 +128,60 @@ export default function CreatePoolInfo() {
           <Text className="text-text mb-3">SELECT YIELD PROTOCOL</Text>
           <View className="flex flex-row gap-x-3">
             {(['COMPOUND','AAVE','YIELD_PROTOCOL'] as YieldContractType[]).map((y) => (
-              <TouchableOpacity key={y} onPress={() => handleYieldContractChange(y)} className={`flex-1 h-[70px] rounded-xl items-center justify-center ${yieldContractType === y ? 'bg-secondary' : 'bg-highlight'}`}>
-                <Text className={`${yieldContractType === y ? 'text-black' : 'text-white'} font-extrabold text-xs`}>{y}</Text>
+              <TouchableOpacity key={y} onPress={() => handleYieldContractChange(y)} className={`flex-1 p-2 h-[70px] rounded-xl items-center justify-center ${yieldContractType === y ? 'bg-secondary' : 'bg-highlight'}`}>
+                <Text className={`${yieldContractType === y ? 'text-black' : 'text-white'} font-extrabold text-xs text-center`}>{y}</Text>
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* Available Markets (from API) */}
+          <View className="mt-5">
+            <Text className="text-white text-[16px] font-extrabold mb-2">Available Markets</Text>
+            {loading ? (
+              <Text className="text-text">Loading markets...</Text>
+            ) : error ? (
+              <Text className="text-accent">Failed to load markets</Text>
+            ) : markets.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                {markets.map((m: any) => {
+                  const key = m?.address ?? m?.pool?.id ?? `${m?.symbol || m?.name || 'm'}-${Math.random().toString(36).slice(2, 8)}`;
+                  const name = m?.pool?.name || m?.name || m?.symbol || 'Unknown';
+                  // Prefer curated APR if available; fallback to supply APY fraction
+                  const curatedAprRaw = m?.stats?.defiSpringSupplyApr?.value ?? null;
+                  const curatedAprDec = m?.stats?.defiSpringSupplyApr?.decimals ?? 18;
+                  const supplyApyRaw = m?.stats?.supplyApy?.value ?? null; // fractional rate (0-1)
+                  const supplyApyDec = m?.stats?.supplyApy?.decimals ?? 18;
+
+                  let apyPercent: string | undefined = undefined;
+                  if (curatedAprRaw !== null && curatedAprRaw !== undefined) {
+                    const apr = Number(curatedAprRaw) / 10 ** curatedAprDec; // fraction
+                    apyPercent = (apr * 100).toFixed(2);
+                  } else if (supplyApyRaw !== null && supplyApyRaw !== undefined) {
+                    const apyFraction = Number(supplyApyRaw) / 10 ** supplyApyDec; // fraction
+                    apyPercent = (apyFraction * 100).toFixed(2);
+                  }
+
+                  return (
+                    <View key={key} className="bg-black border border-secondary rounded-xl px-4 py-3 mr-3 min-w-[160px]">
+                      <Text className="text-white font-semibold text-[12px]" numberOfLines={1}>{name}</Text>
+                      <Text className="text-text text-[11px]" numberOfLines={1}>{m?.symbol}</Text>
+                      {apyPercent !== undefined && (
+                        <Text className="text-text text-[11px] mt-1">APY: {apyPercent}%</Text>
+                      )}
+                    </View>
+                  )
+                })}
+              </ScrollView>
+            ) : (
+              <View>
+                <Text className="text-text">No markets available</Text>
+                {__DEV__ && (
+                  <Text className="text-text mt-1 text-[10px]">Debug: {typeof yeildPools} {yeildPools ? 'received' : 'null'}</Text>
+                )}
+              </View>
+            )}
+          </View>
+
         </View>
 
         <TouchableOpacity onPress={proceed} className="bg-secondary rounded-2xl mt-8 h-[56px] items-center justify-center">

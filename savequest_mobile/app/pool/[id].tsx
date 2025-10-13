@@ -5,6 +5,7 @@ import { useLocalSearchParams, router, useRouter } from 'expo-router'
 import { useAegis } from "@cavos/aegis";
 import { cairo, Contract, RpcProvider } from 'starknet';
 import savequestAbi from '@/app/Abis/savequestAbi.json'
+import useFetch from '@/hooks/useFetch';
 
 // Mock dataset for details
 const mockPools: Record<string, {
@@ -77,15 +78,13 @@ export default function PoolDetails() {
   // Aegis SDK hooks - provides access to wallet and transaction functions
   const { aegisAccount, currentAddress } = useAegis();
   const provider = new RpcProvider({ nodeUrl: 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8' });
-
-
+  
     // State for transaction execution
     const [isExecuting, setIsExecuting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [lastTransactionHash, setLastTransactionHash] = useState<string | null>(
       null
-    );
-  
+    ); 
 
   const getPool = async () => {
     if (!aegisAccount?.isWalletConnected()) return;
