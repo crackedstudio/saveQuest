@@ -73,12 +73,15 @@ export default function PoolDetails() {
   const data = mockPools[id ?? ''] ?? mockPools['stablecoin-squad'];
 
   const [pool, setPool] = useState<any>()
+  const [participants, setParticipants] = useState<any>()
   const router = useRouter();
+
+  let addr = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
 
   // Aegis SDK hooks - provides access to wallet and transaction functions
   const { aegisAccount, currentAddress } = useAegis();
   const provider = new RpcProvider({ nodeUrl: 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8' });
-  
+  const savequestInstance = new Contract(savequestAbi, addr, provider);
     // State for transaction execution
     const [isExecuting, setIsExecuting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -88,12 +91,8 @@ export default function PoolDetails() {
 
   const getPool = async () => {
     if (!aegisAccount?.isWalletConnected()) return;
-    let addr = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
-    
     setIsLoading(true);
     try {
-
-      const savequestInstance = new Contract(savequestAbi, addr, provider);
 
       let response = await savequestInstance.get_pool(id);
 
@@ -108,9 +107,28 @@ export default function PoolDetails() {
     }
   }
 
+  const getPoolParticipants = async () => {
+    if (!aegisAccount?.isWalletConnected()) return;
+    setIsLoading(true);
+    try {
+
+      let response = await savequestInstance.get_all_participants(id);
+
+      setParticipants(response);
+      // alert(pool)
+      console.log(participants)
+    } catch (error) {
+      console.error('Error fetching pools:', error);
+      alert('Failed to fetch pools. Please try again.');
+    } finally {
+      setIsLoading(false);
+    } 
+  }
+
   useEffect(() => {
     getPool();
-  }, [setPool]);
+    getPoolParticipants();
+  }, [setPool, setParticipants]);
 
 
   // Join pool call
@@ -203,7 +221,7 @@ export default function PoolDetails() {
           <View className="mt-6">
             <Text className="text-white text-[18px] font-bold mb-2">Next Yield Recipient</Text>
             <View className="flex flex-row justify-between items-center">
-              <Text className={`text-[18px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}>{data.nextRecipient}</Text>
+            {participants && <Text className={`text-[18px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}> {`0x${participants[0]?.addr.toString(16).slice(0, 4)}..${participants[0]?.addr.toString(16).slice(-4)}`}</Text>}
               <Text className="text-text text-[16px]">{data.daysRemaining} days remaining</Text>
             </View>
             <View className="w-full h-[14px] bg-[#5A5A5A] rounded-full overflow-hidden mt-3">
@@ -231,12 +249,12 @@ export default function PoolDetails() {
         {/* Stats */}
         <View className="flex flex-row gap-x-3">
           <View className="flex-1 bg-bg rounded-xl p-[16px]">
-            <Text className="text-text text-[12px]">Contributions</Text>
-            <Text className="text-white text-[18px] font-bold">{data.contributions}</Text>
+            <Text className="text-text text-[12px] text-center">Contributions</Text>
+            <Text className="text-white text-[18px] font-bold">{pool?.contribution_amount * pool?.participants_count}</Text>
           </View>
           <View className="flex-1 bg-bg rounded-xl p-[16px]">
             <Text className="text-text text-[12px]">Yield Accrued</Text>
-            <Text className={`${data.color === 'secondary' ? 'text-secondary' : 'text-accent'} text-[18px] font-bold`}>{data.yieldAccrued}</Text>
+            <Text className={`${data.color === 'secondary' ? 'text-secondary' : 'text-accent'} text-[18px] font-bold`}>{pool?.total_yield_distributed}</Text>
           </View>
           <View className="flex-1 bg-bg rounded-xl p-[16px]">
             <Text className="text-text text-[12px]">Rate</Text>
@@ -248,11 +266,11 @@ export default function PoolDetails() {
         <View className="bg-bg rounded-2xl p-[20px] gap-y-3">
           <Text className="text-white text-[18px] font-bold">Members</Text>
           <View className="flex flex-row flex-wrap gap-2">
-            {data.memberList.map((m) => (
-              <View key={m.name} className={`${data.color === 'secondary' ? 'bg-[#184242]' : 'bg-[#4B3425]'} px-[12px] py-[10px] rounded-xl`}>
-                <Text className="text-white text-[14px] font-bold">{m.name}</Text>
+            {participants && participants.length > 0 ? participants.map((m : any, index: number) => (
+              <View key={index} className={`${data.color === 'secondary' ? 'bg-[#184242]' : 'bg-[#4B3425]'} px-[12px] py-[10px] rounded-xl`}>
+                <Text className="text-white text-[14px] font-bold">0x{m.addr.toString(16).slice(0, 4)}..{m.addr.toString(16).slice(-4)} </Text>
               </View>
-            ))}
+            )) : <Text>No one has joined yet ...</Text>}
           </View>
         </View>
 
