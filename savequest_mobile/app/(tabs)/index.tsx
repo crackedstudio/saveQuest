@@ -11,9 +11,35 @@ import { useAegis } from "@cavos/aegis";
 import {cairo} from "starknet";
 
 export default function Index() {
-  // const {account} = useAccount();
+
+  const [balance, setBalance] = useState({
+    usdc: '0',
+    usdt: '0',
+    btc: '0'
+  });
 
   const {aegisAccount} = useAegis();
+
+  const get_token_balances = async () => {
+    if(!aegisAccount) {
+      return
+    }
+
+    let usdc_bal = await aegisAccount.getTokenBalance('0x0054bd06a78db79f274984edf6907148c57af42f06ffd9a764ffe40ed9e0129b', 6);
+    let usdt_bal = await aegisAccount.getTokenBalance('0x008D4C6451c45ef46Eff81b13e1a3F2237642b97E528Ce1ae1d8B8eE2b267e8D', 6);
+    let btc_bal = await aegisAccount.getTokenBalance('0x04861Ba938Aed21f2CD7740acD3765Ac4D2974783A3218367233dE0153490CB6', 8);
+
+    console.log(usdc_bal, '\n', usdt_bal, '\n', btc_bal)
+    setBalance({
+      usdc: usdc_bal,
+      usdt: usdt_bal,
+      btc: btc_bal
+    })
+  }
+
+  useEffect(() => {
+    get_token_balances()
+  }, [setBalance])
 
   return (
     <SafeAreaView className="w-full h-full bg-primary">
@@ -37,7 +63,7 @@ export default function Index() {
               <Text className="text-white font-extrabold text-[16px]">POOL BALANCE</Text>
               <Text className="text-secondary bg-black px-3 py-1 rounded-xl">sepolia</Text>
             </View>
-            <Text className="text-white font-extrabold text-[28px] mt-2">$8,847.92</Text>
+            <Text className="text-white font-extrabold text-[28px] mt-2">${Number(balance?.usdc) + Number(balance?.usdt)}</Text>
             <Text className="text-text">Active in 2 pools</Text>
           </View>
 
