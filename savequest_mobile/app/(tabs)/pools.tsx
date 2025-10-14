@@ -49,12 +49,12 @@ const PoolCard = ({ pool }: { pool: any }) => {
         <View className='flex flex-row items-center gap-x-4'>
           <View className='w-[48px] h-[48px] rounded-xl bg-secondary' />
           <View className='flex flex-col gap-y-1'>
-            {/* <Text className='text-white text-[18px] font-bold'>{getPoolName(pool.id)}</Text> */}
+            <Text className='text-white text-[18px] font-bold'>{Number(pool.id)}</Text>
             <Text className='text-text text-[12px]'>{getTokenType(pool.deposit_token.toString())}</Text>
           </View>
         </View>
         <View className='items-end'>
-          <Text className='text-secondary text-[22px] font-extrabold'>${formatAmount(pool.principal_amount)}</Text>
+          <Text className='text-secondary text-[22px] font-extrabold'>${formatAmount((Number(pool.participants_count) * Number(pool.contribution_amount)).toString()) }</Text>
           <Text className='text-text text-[12px]'>{Number(pool.participants_count)} members</Text>
         </View>
       </View>
@@ -64,13 +64,13 @@ const PoolCard = ({ pool }: { pool: any }) => {
           <Text className='text-white text-[16px] font-bold'>Next Yield Recipient:</Text>
           <Text className='text-secondary text-[16px] font-bold'></Text>
         </View> */}
-        {/* <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
+        <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
           <View 
             className='h-full bg-black' 
-            style={{ width: `${getProgressPercentage(pool.participants_count, pool.max_participants)}%` }}
+            style={{ width: `${getProgressPercentage(Number(pool.participants_count), Number(pool.max_participants))}%` }}
           />
-        </View> */}
-        {/* <Text className='text-text text-[12px] mt-2'>{getDaysRemaining(pool.start_timestamp)} days remaining</Text> */}
+        </View>
+        <Text className='text-text text-[12px] mt-2'>{getDaysRemaining(Number(pool.start_timestamp))} days remaining</Text>
       </View>
 
       <View className='mt-6 flex flex-row justify-between items-center'>
