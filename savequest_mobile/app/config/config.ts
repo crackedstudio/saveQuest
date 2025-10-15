@@ -13,6 +13,7 @@ export const NETWORK = {
   export const API = {
     baseUrl: "https://dev.api.vesu.xyz",
     markets: "https://dev.api.vesu.xyz/markets",
+    positonInfo: "https://dev.api.vesu.xyz/positions?walletAddress=",
     troves: ""
   };
   

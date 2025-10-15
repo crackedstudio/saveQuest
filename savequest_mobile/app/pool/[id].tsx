@@ -6,7 +6,7 @@ import { useAegis } from "@cavos/aegis";
 import { cairo, Contract, RpcProvider } from 'starknet';
 import savequestAbi from '@/app/Abis/savequestAbi.json'
 import useFetch from '@/hooks/useFetch';
-import { CONTRACTS } from '../config/config';
+import { API, CONTRACTS } from '../config/config';
 
 // Mock dataset for details
 const mockPools: Record<string, {
@@ -75,7 +75,12 @@ export default function PoolDetails() {
 
   const [pool, setPool] = useState<any>()
   const [participants, setParticipants] = useState<any>([])
+  const [depositToken, setDepositToken] = useState<any>()
   const router = useRouter();
+
+  const poolPositionInfo = useFetch(API.positonInfo+CONTRACTS.saveQuest)
+
+  console.log(poolPositionInfo.data)
 
   // Aegis SDK hooks - provides access to wallet and transaction functions
   const { aegisAccount, currentAddress } = useAegis();
@@ -96,8 +101,21 @@ export default function PoolDetails() {
       let response = await savequestInstance.get_pool(id);
 
       setPool(response);
-      // alert(pool)
-      console.log("pool:",pool)
+
+      // Safely handle different cases
+    const token = response.deposit_token;
+    let tokenAddress;
+
+    if (typeof token === "string") {
+      tokenAddress = token;
+    } else if (typeof token === "bigint") {
+      tokenAddress = `0x${token.toString(16)}`;
+     } else {
+      tokenAddress = "Unknown format";
+    }
+
+    setDepositToken(tokenAddress);
+
     } catch (error) {
       console.error('Error fetching pools:', error);
       alert('Failed to fetch pools. Please try again.');
@@ -133,6 +151,7 @@ export default function PoolDetails() {
   // Join pool call
 
   const handleExecuteApproveAndJoinPool = async () => {
+
     if (!aegisAccount) {
       Alert.alert("Error", "Aegis SDK not initialized");
       return;
@@ -145,7 +164,7 @@ export default function PoolDetails() {
         const approveAmount = Number(pool?.contribution_amount);
 
       console.log("Executing approve transaction:", {
-        contract: pool?.deposit_token_address,
+        contract: depositToken,
         spender: CONTRACTS.saveQuest,
         amount: approveAmount,
         currentAddress: currentAddress,
@@ -155,7 +174,7 @@ export default function PoolDetails() {
       // This allows for future expansion to multiple calls in one transaction
       const result = await aegisAccount.executeBatch([
         {
-          contractAddress: pool?.deposit_token_address,
+          contractAddress: depositToken,
           entrypoint: 'approve',
           calldata: [CONTRACTS.saveQuest, cairo.uint256(approveAmount)],
         },
