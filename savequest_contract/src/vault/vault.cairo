@@ -52,6 +52,7 @@ pub mod SaveQuestVault {
         pool_count: u64,
         pools: Map<u64, Pool>,
         pool_participants: Map::<(u64, u32), Participant>,
+        savings: Map<ContractAddress, u256>
     }
 
     #[abi(embed_v0)]
@@ -186,6 +187,7 @@ pub mod SaveQuestVault {
             let _new_principal_amt = _pool.principal_amount + _pool.contribution_amount;
             self.pool_participants.write((_pool_id, _new_count), _participant);
             self.pools.write(_pool_id, Pool{ participants_count: _new_count, principal_amount: _new_principal_amt, .._pool});
+            self.savings.write(_caller, self.savings.read(_caller) + _pool.contribution_amount);
 
             self.emit(JoinPoolEvent{
                 pool_id: _pool_id,
@@ -200,6 +202,10 @@ pub mod SaveQuestVault {
 
 
         // ==== GETTER FUNCTIONS ====
+        fn get_pool_count (self: @ContractState) -> u64 {
+            self.pool_count.read()
+        }
+
         fn get_pool(self: @ContractState, _pool_id: u64) -> Pool {
             self.pools.read(_pool_id)
         }
@@ -216,6 +222,10 @@ pub mod SaveQuestVault {
             }
 
             _all_pools
+        }
+
+        fn get_user_savings(self: @ContractState, address: ContractAddress) -> u256 {
+            self.savings.read(address)
         }
 
         fn get_participant(self: @ContractState, _pool_id: u64, _participant_id: u32) -> Participant {
