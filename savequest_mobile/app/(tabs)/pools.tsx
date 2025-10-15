@@ -6,6 +6,7 @@ import { router } from 'expo-router'
 import { useAegis } from "@cavos/aegis";
 import { Contract, RpcProvider } from 'starknet'
 import savequestAbi from '@/app/Abis/savequestAbi.json'
+import { CONTRACTS, NETWORK } from '../config/config';
 
 // PoolCard component for displaying individual pools
 const PoolCard = ({ pool }: { pool: any }) => {
@@ -94,18 +95,15 @@ const pools = () => {
   const [pools, setPools] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const provider = new RpcProvider({ nodeUrl: 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8' });
-
-    
+  const provider = new RpcProvider({ nodeUrl: NETWORK.rpcUrl });  
 
   const getPools = async () => {
     if (!aegisAccount?.isWalletConnected()) return;
-    let addr = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
     
     setIsLoading(true);
     try {
 
-      const savequestInstance = new Contract(savequestAbi, addr, provider);
+      const savequestInstance = new Contract(savequestAbi, CONTRACTS.saveQuest, provider);
 
       let response = await savequestInstance.get_all_pools();
 

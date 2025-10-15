@@ -1,8 +1,43 @@
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Contract, RpcProvider } from "starknet";
+import savequestAbi from '@/app/Abis/savequestAbi.json'
+import { useAegis } from "@cavos/aegis";
+import { CONTRACTS, NETWORK } from "../config/config";
 
 export default function Savings() {
+  const { aegisAccount } = useAegis();
+  const [balance, setBalance] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const getUserSavingBalance = async () => {
+   
+    const provider = new RpcProvider({ nodeUrl: NETWORK.rpcUrl });
+
+    if (!aegisAccount?.isWalletConnected()) return;
+    
+    setIsLoading(true);
+    try {
+
+      const savequestInstance = new Contract(savequestAbi, CONTRACTS.saveQuest, provider);
+
+      let response = await savequestInstance.get_user_savings(aegisAccount.address);
+
+      setBalance(response);
+      // console.log(parsedPools)
+    } catch (error) {
+      console.error('Error fetching pools:', error);
+      alert('Failed to fetch pools. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getUserSavingBalance();
+  }, [setBalance]);
+
   return (
     <SafeAreaView className="w-full h-full bg-primary">
       <ScrollView className="p-[24px]" contentContainerStyle={{ paddingBottom: 40 }}>
@@ -16,7 +51,7 @@ export default function Savings() {
         {/* Total Savings */}
         <View className="bg-bg rounded-2xl p-[16px] shadow-custom">
           <Text className="text-white font-extrabold text-[14px]">TOTAL SAVINGS</Text>
-          <Text className="text-white font-extrabold text-[28px] mt-1">$4,000.00</Text>
+          <Text className="text-white font-extrabold text-[28px] mt-1">${balance}</Text>
           <Text className="text-text">Personal vault balance</Text>
         </View>
 

@@ -9,8 +9,15 @@ import { useAccount } from "@/context/UserContext";
 import { useEffect, useState } from "react";
 import { useAegis } from "@cavos/aegis";
 import {cairo} from "starknet";
+import { Contract, RpcProvider } from "starknet";
+import savequestAbi from '@/app/Abis/savequestAbi.json'
+import { CONTRACTS, NETWORK } from "../config/config";
 
 export default function Index() {
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [savingBalance, setSavingBalance] = useState<number>(0);
+  const [poolCount, setPoolCount] = useState<number>(0);
 
   const [balance, setBalance] = useState({
     usdc: '0',
@@ -37,9 +44,52 @@ export default function Index() {
     })
   }
 
+  const provider = new RpcProvider({ nodeUrl: NETWORK.rpcUrl });
+
+  const getUserSavingBalance = async () => {
+
+    if (!aegisAccount?.isWalletConnected()) return;
+    
+    setIsLoading(true);
+    try {
+
+      const savequestInstance = new Contract(savequestAbi, CONTRACTS.saveQuest, provider);
+
+      let response = await savequestInstance.get_user_savings(aegisAccount.address);
+
+      setSavingBalance(response);
+      // console.log(parsedPools)
+    } catch (error) {
+      console.error('Error fetching pools:', error);
+      alert('Failed to fetch pools. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const getPoolCount = async () => {
+    if (!aegisAccount?.isWalletConnected()) return;
+    setIsLoading(true);
+    try {
+
+      const savequestInstance = new Contract(savequestAbi, CONTRACTS.saveQuest, provider);
+
+      let response = await savequestInstance.get_pool_count();
+
+      setPoolCount(response);
+    }
+    catch (error) {
+      console.error('Error fetching pools:', error);
+      alert('Failed to fetch pools. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
     get_token_balances()
-  }, [setBalance])
+    getPoolCount()
+  }, [setBalance, setSavingBalance, setPoolCount])
 
   return (
     <SafeAreaView className="w-full h-full bg-primary">
@@ -64,12 +114,12 @@ export default function Index() {
               <Text className="text-secondary bg-black px-3 py-1 rounded-xl">sepolia</Text>
             </View>
             <Text className="text-white font-extrabold text-[28px] mt-2">${Number(balance?.usdc) + Number(balance?.usdt)}</Text>
-            <Text className="text-text">Active in 2 pools</Text>
+            <Text className="text-text">Active in {poolCount} pools</Text>
           </View>
 
           <View className="bg-bg rounded-2xl p-[16px] border border-highlight">
             <Text className="text-white font-extrabold text-[16px]">MY SAVINGS</Text>
-            <Text className="text-white font-extrabold text-[28px] mt-2">$4,000.00</Text>
+            <Text className="text-white font-extrabold text-[28px] mt-2">${savingBalance}</Text>
             <Text className="text-text">Personal vault</Text>
           </View>
 
