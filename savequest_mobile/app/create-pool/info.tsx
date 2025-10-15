@@ -5,6 +5,7 @@ import { router } from 'expo-router'
 import { usePoolCreate, TokenType, GroupType, YieldContractType } from '@/context/PoolCreateContext'
 import { getTokenAddress, getYieldContractAddress } from '@/utils/tokenAddresses'
 import useFetch from '@/hooks/useFetch'
+import { API } from '../config/config'
 
 export default function CreatePoolInfo() {
   const { state, setState } = usePoolCreate()
@@ -13,9 +14,10 @@ export default function CreatePoolInfo() {
   const [token, setToken] = useState<TokenType>(state.token)
   const [groupType, setGroupType] = useState<GroupType>(state.groupType)
   const [yieldContractType, setYieldContractType] = useState<YieldContractType>(state.yieldContractType)
+  const [yeildContract, setYeildContract] = useState('');
 
 
-  const {data: yeildPools, error, loading} = useFetch('https://dev.api.vesu.xyz/markets');
+  const {data: yeildPools, error, loading} = useFetch(API.markets);
  
   // Normalize markets from API (handles different response shapes)
   const markets: any[] = React.useMemo(() => {
@@ -60,6 +62,8 @@ export default function CreatePoolInfo() {
       groupType,
       yieldContractType,
       yieldContractAddress: getYieldContractAddress(yieldContractType)
+      
+      // getYieldContractAddress(yieldContractType)
     }))
     router.push('/create-pool/members')
   }
@@ -127,7 +131,7 @@ export default function CreatePoolInfo() {
           <Text className="text-white text-[18px] font-extrabold mb-3">YIELD PROTOCOL</Text>
           <Text className="text-text mb-3">SELECT YIELD PROTOCOL</Text>
           <View className="flex flex-row gap-x-3">
-            {(['COMPOUND','AAVE','YIELD_PROTOCOL'] as YieldContractType[]).map((y) => (
+            {(['usdc','usdt','btc'] as YieldContractType[]).map((y) => (
               <TouchableOpacity key={y} onPress={() => handleYieldContractChange(y)} className={`flex-1 p-2 h-[70px] rounded-xl items-center justify-center ${yieldContractType === y ? 'bg-secondary' : 'bg-highlight'}`}>
                 <Text className={`${yieldContractType === y ? 'text-black' : 'text-white'} font-extrabold text-xs text-center`}>{y}</Text>
               </TouchableOpacity>
@@ -163,11 +167,13 @@ export default function CreatePoolInfo() {
 
                   return (
                     <View key={key} className="bg-black border border-secondary rounded-xl px-4 py-3 mr-3 min-w-[160px]">
-                      <Text className="text-white font-semibold text-[12px]" numberOfLines={1}>{name}</Text>
-                      <Text className="text-text text-[11px]" numberOfLines={1}>{m?.symbol}</Text>
-                      {apyPercent !== undefined && (
-                        <Text className="text-text text-[11px] mt-1">APY: {apyPercent}%</Text>
-                      )}
+                      <TouchableOpacity onPress={() => {setYeildContract(m?.vToken.address)}}>
+                        <Text className="text-white font-semibold text-[12px]" numberOfLines={1}>{name}</Text>
+                        <Text className="text-text text-[11px]" numberOfLines={1}>{m?.symbol}</Text>
+                        {apyPercent !== undefined && (
+                          <Text className="text-text text-[11px] mt-1">APY: {apyPercent}%</Text>
+                        )}
+                      </TouchableOpacity>
                     </View>
                   )
                 })}

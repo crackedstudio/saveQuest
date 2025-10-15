@@ -30,24 +30,24 @@ export const getTokenAddress = (token: 'USDT' | 'USDC' | 'BTC', network: 'mainne
 export const YIELD_CONTRACT_ADDRESSES = {
   // Mainnet addresses (example - replace with actual addresses)
   mainnet: {
-    COMPOUND: '0x...', // Replace with actual Compound contract address
-    AAVE: '0x...',      // Replace with actual Aave contract address
-    YIELD_PROTOCOL: '0x...', // Replace with actual Yield Protocol contract address
+    usdc: '0x...', // Replace with actual Compound contract address
+    usdt: '0x...',      // Replace with actual Aave contract address
+    btc: '0x...', // Replace with actual Yield Protocol contract address
   },
   // Testnet addresses (example - replace with actual addresses)
   testnet: {
-    COMPOUND: '0x...', // Replace with actual testnet Compound contract address
-    AAVE: '0x...',      // Replace with actual testnet Aave contract address
-    YIELD_PROTOCOL: '0x...', // Replace with actual testnet Yield Protocol contract address
+    usdc: '0x0341e472cdfe6fc6a6d9684d26f1028b177c48a52ffd4c847fea60e66b21a455', // Replace with actual testnet Compound contract address
+    usdt: '0x03638b8f85f909e34d44fa3dac5b55ec85cd60d0cdd15e2bd65397e4732228b1',      // Replace with actual testnet Aave contract address
+    btc: '0x033d52ef1746ab58c5a22f8e4d80eaaf7c5a08fcfaa6c5e5365680d0ed482f34', // Replace with actual testnet Yield Protocol contract address
   },
   // Sepolia testnet addresses (example - replace with actual addresses)
   sepolia: {
-    COMPOUND: '0x...', // Replace with actual Sepolia Compound contract address
-    AAVE: '0x...',      // Replace with actual Sepolia Aave contract address
-    YIELD_PROTOCOL: '0x...', // Replace with actual Sepolia Yield Protocol contract address
+    usdc: '0x0341e472cdfe6fc6a6d9684d26f1028b177c48a52ffd4c847fea60e66b21a455', // Replace with actual Sepolia Compound contract address
+    usdt: '0x03638b8f85f909e34d44fa3dac5b55ec85cd60d0cdd15e2bd65397e4732228b1',      // Replace with actual Sepolia Aave contract address
+    btc: '0x033d52ef1746ab58c5a22f8e4d80eaaf7c5a08fcfaa6c5e5365680d0ed482f34', // Replace with actual Sepolia Yield Protocol contract address
   }
 }
 
-export const getYieldContractAddress = (protocol: 'COMPOUND' | 'AAVE' | 'YIELD_PROTOCOL', network: 'mainnet' | 'testnet' | 'sepolia' = 'sepolia'): string => {
+export const getYieldContractAddress = (protocol: 'usdc' | 'usdt' | 'btc', network: 'mainnet' | 'testnet' | 'sepolia' = 'sepolia'): string => {
   return YIELD_CONTRACT_ADDRESSES[network][protocol]
 }

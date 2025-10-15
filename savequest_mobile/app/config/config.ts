@@ -13,7 +13,7 @@ export const NETWORK = {
   export const API = {
     baseUrl: "https://dev.api.vesu.xyz",
     markets: "https://dev.api.vesu.xyz/markets",
-    rpc: "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8"
+    troves: ""
   };
   
   export const APP = {

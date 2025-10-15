@@ -3,7 +3,7 @@ import { getTokenAddress, getYieldContractAddress } from '@/utils/tokenAddresses
 
 export type TokenType = 'USDT' | 'USDC' | 'BTC'
 export type GroupType = 'closed' | 'open'
-export type YieldContractType = 'COMPOUND' | 'AAVE' | 'YIELD_PROTOCOL'
+export type YieldContractType = 'usdc' | 'usdt' | 'btc'
 
 export type Member = { id: string; handle: string }
 
@@ -40,9 +40,9 @@ const defaultState: CreatePoolState = {
   startDateISO: new Date().toISOString(),
   
   // Contract addresses (automatically set based on selections)
-  depositTokenAddress: getTokenAddress('USDT'),
-  yieldContractType: 'COMPOUND',
-  yieldContractAddress: getYieldContractAddress('COMPOUND'),
+  depositTokenAddress: getTokenAddress('USDC'),
+  yieldContractType: 'usdc',
+  yieldContractAddress: getYieldContractAddress('usdc'),
 }
 
 type Ctx = {
