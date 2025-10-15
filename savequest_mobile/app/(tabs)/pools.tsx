@@ -55,23 +55,23 @@ const PoolCard = ({ pool }: { pool: any }) => {
           </View>
         </View>
         <View className='items-end'>
-          <Text className='text-secondary text-[22px] font-extrabold'>${formatAmount((Number(pool.participants_count) * Number(pool.contribution_amount)).toString()) }</Text>
+          <Text className='text-secondary text-[22px] font-extrabold'>${( Number(pool.contribution_amount)).toFixed(2) }</Text>
           <Text className='text-text text-[12px]'>{Number(pool.participants_count)} members</Text>
         </View>
       </View>
 
       <View className='mt-6'>
-        {/* <View className='flex flex-row justify-between items-center mb-2'>
+        <View className='flex flex-row justify-between items-center mb-2'>
           <Text className='text-white text-[16px] font-bold'>Next Yield Recipient:</Text>
           <Text className='text-secondary text-[16px] font-bold'></Text>
-        </View> */}
+        </View>
         <View className='w-full h-[10px] bg-[#5A5A5A] rounded-full overflow-hidden'>
           <View 
             className='h-full bg-black' 
-            style={{ width: `${getProgressPercentage(Number(pool.participants_count), Number(pool.max_participants))}%` }}
+            style={{ width: `${getProgressPercentage(Number(pool?.participants_count), Number(pool?.max_participants))}%` }}
           />
         </View>
-        <Text className='text-text text-[12px] mt-2'>{getDaysRemaining(Number(pool.start_timestamp))} days remaining</Text>
+        <Text className='text-text text-[12px] mt-2'>{getDaysRemaining(Number(pool?.start_timestamp))} days remaining</Text>
       </View>
 
       <View className='mt-6 flex flex-row justify-between items-center'>
@@ -81,7 +81,7 @@ const PoolCard = ({ pool }: { pool: any }) => {
         </View> */}
         <TouchableOpacity 
           className='bg-secondary px-[18px] py-[12px] rounded-xl' 
-          onPress={() => router.push({ pathname: '/pool/[id]', params: { id: pool.id.toString() } })}
+          onPress={() => router.push({ pathname: `/pool/[id]`, params: { id: Number(pool.id) } })}
         >
           <Text className='text-black text-[16px] font-extrabold'>VIEW DETAILS</Text>
         </TouchableOpacity>
@@ -119,7 +119,7 @@ const pools = () => {
 
   useEffect(() => {
     getPools();
-  }, []);
+  }, [setPools]);
 
   
   return (
@@ -175,7 +175,7 @@ const pools = () => {
           data={pools}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <PoolCard pool={item} />}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />
       )}

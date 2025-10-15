@@ -6,6 +6,7 @@ import { useAegis } from "@cavos/aegis";
 import { cairo, Contract, RpcProvider } from 'starknet';
 import savequestAbi from '@/app/Abis/savequestAbi.json'
 import useFetch from '@/hooks/useFetch';
+import { CONTRACTS } from '../config/config';
 
 // Mock dataset for details
 const mockPools: Record<string, {
@@ -73,15 +74,13 @@ export default function PoolDetails() {
   const data = mockPools[id ?? ''] ?? mockPools['stablecoin-squad'];
 
   const [pool, setPool] = useState<any>()
-  const [participants, setParticipants] = useState<any>()
+  const [participants, setParticipants] = useState<any>([])
   const router = useRouter();
-
-  let addr = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
 
   // Aegis SDK hooks - provides access to wallet and transaction functions
   const { aegisAccount, currentAddress } = useAegis();
   const provider = new RpcProvider({ nodeUrl: 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8' });
-  const savequestInstance = new Contract(savequestAbi, addr, provider);
+  const savequestInstance = new Contract(savequestAbi, CONTRACTS.saveQuest, provider);
     // State for transaction execution
     const [isExecuting, setIsExecuting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +97,7 @@ export default function PoolDetails() {
 
       setPool(response);
       // alert(pool)
-      console.log(pool)
+      console.log("pool:",pool)
     } catch (error) {
       console.error('Error fetching pools:', error);
       alert('Failed to fetch pools. Please try again.');
@@ -116,7 +115,7 @@ export default function PoolDetails() {
 
       setParticipants(response);
       // alert(pool)
-      console.log(participants)
+      console.log("participants:",participants)
     } catch (error) {
       console.error('Error fetching pools:', error);
       alert('Failed to fetch pools. Please try again.');
@@ -142,17 +141,12 @@ export default function PoolDetails() {
     setIsExecuting(true);
     try {
       // STRK token address on Sepolia testnet
-      const strkTokenAddress =
-        "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";  
-
-      const usdc = '0x0054bd06a78db79f274984edf6907148c57af42f06ffd9a764ffe40ed9e0129b';
 
         const approveAmount = Number(pool?.contribution_amount);
-      const savequest_contract = '0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b'
 
       console.log("Executing approve transaction:", {
-        contract: usdc,
-        spender: savequest_contract,
+        contract: pool?.deposit_token_address,
+        spender: CONTRACTS.saveQuest,
         amount: approveAmount,
         currentAddress: currentAddress,
       });
@@ -161,12 +155,12 @@ export default function PoolDetails() {
       // This allows for future expansion to multiple calls in one transaction
       const result = await aegisAccount.executeBatch([
         {
-          contractAddress: usdc,
+          contractAddress: pool?.deposit_token_address,
           entrypoint: 'approve',
-          calldata: [savequest_contract, cairo.uint256(approveAmount)],
+          calldata: [CONTRACTS.saveQuest, cairo.uint256(approveAmount)],
         },
         {
-          contractAddress: savequest_contract,
+          contractAddress: CONTRACTS.saveQuest,
           entrypoint: 'join_pool',
           calldata: [id]
         }
@@ -186,8 +180,7 @@ export default function PoolDetails() {
       console.error("Failed to execute approve transaction:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
-      Alert.alert(
-        "Error",
+      alert(  
         `Failed to execute approve transaction: ${errorMessage}`
       );
     } finally {
@@ -221,7 +214,7 @@ export default function PoolDetails() {
           <View className="mt-6">
             <Text className="text-white text-[18px] font-bold mb-2">Next Yield Recipient</Text>
             <View className="flex flex-row justify-between items-center">
-            {participants && <Text className={`text-[18px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}> {`0x${participants[0]?.addr.toString(16).slice(0, 4)}..${participants[0]?.addr.toString(16).slice(-4)}`}</Text>}
+            {participants && participants.length > 0 ? <Text className={`text-[18px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}> {`0x${participants[0]?.addr.toString(16).slice(0, 4)}..${participants[0]?.addr.toString(16).slice(-4)}`}</Text> : <Text className={`text-[18px] font-extrabold ${data.color === 'secondary' ? 'text-secondary' : 'text-accent'}`}> Yet to join</Text>}
               <Text className="text-text text-[16px]">{data.daysRemaining} days remaining</Text>
             </View>
             <View className="w-full h-[14px] bg-[#5A5A5A] rounded-full overflow-hidden mt-3">
@@ -257,8 +250,8 @@ export default function PoolDetails() {
             <Text className={`${data.color === 'secondary' ? 'text-secondary' : 'text-accent'} text-[18px] font-bold`}>{pool?.total_yield_distributed}</Text>
           </View>
           <View className="flex-1 bg-bg rounded-xl p-[16px]">
-            <Text className="text-text text-[12px]">Rate</Text>
-            <Text className="text-white text-[18px] font-bold">{data.apy}</Text>
+            <Text className="text-text text-[12px]">contribution amount</Text>
+            <Text className="text-white text-[18px] font-bold">{pool?.contribution_amount}</Text>
           </View>
         </View>
 
@@ -283,7 +276,7 @@ export default function PoolDetails() {
                 <Text className="text-white text-[16px] font-extrabold">{a.type === 'deposit' ? 'Deposit' : a.type === 'yield' ? 'Yield' : 'Payout'}</Text>
                 <Text className="text-text text-[14px]">{a.date}</Text>
               </View>
-              <Text className={`${a.accent === 'secondary' ? 'text-secondary' : 'text-accent'} text-[16px] font-extrabold`}>{a.amount}</Text>
+              <Text className={`${a.accent === 'secondary' ? 'text-secondary' : 'text-accent'} text-[12px] font-extrabold`}>0x{pool?.yeild_contract.toString(16).slice(0, 4)}..{pool?.yeild_contract.toString(16).slice(-4)}</Text>
             </View>
           ))}
         </View>
