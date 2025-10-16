@@ -76,12 +76,13 @@ export default function PoolDetails() {
   const [pool, setPool] = useState<any>()
   const [participants, setParticipants] = useState<any>([])
   const [depositToken, setDepositToken] = useState<any>()
+  const [poolData, setPoolData] = useState<any>()
   const router = useRouter();
 
-  const poolPositionInfo = useFetch(API.positonInfo+CONTRACTS.saveQuest)
+  const {data: positionData, loading, error} = useFetch(API.positonInfo+CONTRACTS.saveQuest)
 
-  console.log(poolPositionInfo.data)
-
+  // Format the number since it's stored as an integer with decimals
+  // const formattedValue = Number(value) / 10 ** poolData.collateral.decimals;
   // Aegis SDK hooks - provides access to wallet and transaction functions
   const { aegisAccount, currentAddress } = useAegis();
   const provider = new RpcProvider({ nodeUrl: 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_8/-lEzc_71TeeTviJ9dEf6nKclkiYnQet8' });
@@ -258,6 +259,15 @@ export default function PoolDetails() {
           )}
         </TouchableOpacity>
 
+        <TouchableOpacity 
+          onPress={() => {}}
+          disabled={isExecuting}
+          className="bg-secondary rounded-xl py-[14px] items-center"
+        >
+          {<Text className="text-black text-[18px] font-extrabold">claim rewards</Text>}
+        </TouchableOpacity>
+
+
         {/* Stats */}
         <View className="flex flex-row gap-x-3">
           <View className="flex-1 bg-bg rounded-xl p-[16px]">
@@ -282,13 +292,42 @@ export default function PoolDetails() {
               <View key={index} className={`${data.color === 'secondary' ? 'bg-[#184242]' : 'bg-[#4B3425]'} px-[12px] py-[10px] rounded-xl`}>
                 <Text className="text-white text-[14px] font-bold">0x{m.addr.toString(16).slice(0, 4)}..{m.addr.toString(16).slice(-4)} </Text>
               </View>
-            )) : <Text>No one has joined yet ...</Text>}
+            )) : <Text className='text-white'>No one has joined yet ...</Text>}
+          </View>
+        </View>
+
+        <View className="bg-bg rounded-2xl p-[20px] gap-y-3">
+          <Text className="text-white text-[18px] font-bold">Position Info</Text>
+          <View className="flex flex-row flex-wrap gap-2">
+          {loading ? (
+              <Text className="text-text">Loading position...</Text>
+            ) : error ? (
+              <Text className="text-accent">Failed to load position</Text>
+            ) : positionData.data.length >= id ? (
+              <View className='flex w-full items-center gap-y-4 justify-center'>
+              <View className='grid grid-col-2'>
+                <Text className='font-bold text-gray-500 text-center'>Name</Text>  
+                <Text className='text-white text-center text-[14px] font-bold'>{positionData.data[Number(id) - 1].pool.name}</Text>
+              </View>
+
+              <View className='grid grid-col-2'>
+                <Text className='font-bold text-gray-500 text-center'>collateral(Vtoken)</Text>  
+                <Text className='text-white text-center text-[14px] font-bold'>{positionData.data[Number(id) - 1].collateralShares.name}</Text>
+              </View>
+
+              <View className='grid grid-col-2'>
+                <Text className='font-bold text-gray-500 text-center'>collateral(Vtoken)</Text>  
+                <Text className='text-white text-center text-[14px] font-bold'>{positionData.data[Number(id) - 1].collateral.value}</Text>
+              </View>
+              </View>
+            ) : <Text className='text-red-500'>No position yet</Text>
+          }
           </View>
         </View>
 
         {/* Activity */}
         <View className="gap-y-3">
-          <Text className="text-white text-[18px] font-bold">Recent Activity</Text>
+          <Text className="text-white text-[18px] font-bold">More Info</Text>
           {data.activity.map((a) => (
             <View key={a.id} className="p-[16px] flex flex-row justify-between items-center h-[76px] bg-bg rounded-[12px]">
               <View className="flex flex-col">

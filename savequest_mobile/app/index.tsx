@@ -222,17 +222,31 @@ const onboarding = () => {
 
        
 
-        <View className="flex flex-col gap-y-6">
+        <View className="flex flex-col gap-y-4">
           {/* <TouchableOpacity className="w-full bg-secondary h-[60px] rounded-[16px] justify-center items-center">
             <Link className="text-primary font-bold text-[18px]" href="/(tabs)">
               GET STARTED
             </Link>
           </TouchableOpacity> */}
 
-          <View className="flex flex-col gap-y-3">
-            <Text className="text-white text-center text-[16px] font-semibold">
-              continue with
+        <View className="flex flex-row gap-x-4 w-full  h-[117.516px] mt-[50px]">
+          <View className="flex flex-col w-1/2 p-[16px] border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2">
+            <View className="w-[33.097px] h-[33.097px] bg-secondary rounded-lg"></View>
+            <Text className="text-white font-bold text-[14px]">
+              STABLE COINS
             </Text>
+            <Text className="text-[12px] text-highlight">7.8% APY</Text>
+          </View>
+
+          <View className="flex flex-col w-1/2 p-[16px] border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2">
+            <View className="w-[33.097px] h-[33.097px] bg-accent rounded-lg"></View>
+            <Text className="text-white font-bold text-[14px]">BTC VAULt</Text>
+            <Text className="text-highlight text-[12px]">7.8% APY</Text>
+          </View>
+        </View>
+
+          <View className="flex flex-col gap-y-3">
+           
             
             <TouchableOpacity 
               className="w-full bg-black border border-gray-600 h-[56px] rounded-[16px] justify-center items-center flex-row"
@@ -246,7 +260,6 @@ const onboarding = () => {
                 </>
               ) : (
                 <>
-                  <Text className="text-white text-[20px] mr-2">🍎</Text>
                   <Text className="text-white font-semibold text-[16px]">Continue with Apple</Text>
                 </>
               )}
@@ -264,28 +277,11 @@ const onboarding = () => {
                 </>
               ) : (
                 <>
-                  <Text className="text-[20px] mr-2">🔍</Text>
                   <Text className="text-gray-800 font-semibold text-[16px]">Continue with Google</Text>
                 </>
               )}
             </TouchableOpacity>
           </View>
-
-          <View className="flex flex-row gap-x-4 w-full  h-[117.516px] mt-[50px]">
-          <View className="flex flex-col w-1/2 p-[16px] border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2">
-            <View className="w-[33.097px] h-[33.097px] bg-secondary rounded-lg"></View>
-            <Text className="text-white font-bold text-[14px]">
-              STABLE COINS
-            </Text>
-            <Text className="text-[12px] text-highlight">7.8% APY</Text>
-          </View>
-
-          <View className="flex flex-col w-1/2 p-[16px] border-r-[8px] border-b-[8px] rounded-[12px] justify-center gap-y-2">
-            <View className="w-[33.097px] h-[33.097px] bg-accent rounded-lg"></View>
-            <Text className="text-white font-bold text-[14px]">BTC VAULt</Text>
-            <Text className="text-highlight text-[12px]">7.8% APY</Text>
-          </View>
-        </View>
           
           <View>
             <Text className="text-text font-semibold text-center text-[12px]">

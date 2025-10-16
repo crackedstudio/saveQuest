@@ -6,7 +6,7 @@ export const NETWORK = {
   };
   
   export const CONTRACTS = {
-    saveQuest: "0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b",
+    saveQuest: "0x0434c56079d512ccfc3ced763b75221dd2d577372eee23710e4b0d7add52d602",
     token: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef",
   };
   

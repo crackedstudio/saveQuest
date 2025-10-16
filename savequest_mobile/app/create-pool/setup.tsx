@@ -5,6 +5,7 @@ import { router } from 'expo-router'
 import { usePoolCreate } from '@/context/PoolCreateContext'
 import { useAegis } from '@cavos/aegis'
 import { cairo } from 'starknet'
+import { CONTRACTS } from '../config/config'
 
 export default function RotationSetup() {
   const { state, setState, reset } = usePoolCreate()
@@ -48,7 +49,7 @@ export default function RotationSetup() {
 
     try {
        const result = await aegisAccount.execute(
-        "0x0579fea85df1d53cf175adb65bc0a6be70b9c5fb867f7983da1a772508c7141b",
+        CONTRACTS.saveQuest,
         "create_pool",
         [
           cairo.felt(state.poolName),

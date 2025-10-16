@@ -56,3 +56,8 @@ The planned frontend is a **React Native + native-wind** app for mobile users to
 | **Accessibility**        | Requires technical knowledge, risk assessment                 | Abstracted away — just join a pool                          |
 | **Financial Discipline** | Easy to withdraw early                                        | Locked-in commitment helps enforce saving                   |
 | **Transparency**         | Harder to verify yield distribution                           | Fully on-chain, verifiable selection & accounting           |
+
+
+[Contract Address](https://sepolia.starkscan.co/contract/0x0434c56079d512ccfc3ced763b75221dd2d577372eee23710e4b0d7add52d602)
+
+[demo video](https://vimeo.com/1127737467?share=copy&fl=sv&fe=ci)
